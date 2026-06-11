@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Raag, RaagInput } from '../services/raagService'
 import { Sargam, SargamInput } from '../services/sargamService'
 import { Bandish, BandishInput } from '../services/bandishService'
+import { Taan, TaanInput } from '../services/taanService'
 
 interface AppState {
   // Selection state
@@ -46,6 +47,17 @@ interface AppState {
   deleteBandish: (id: string) => void
   setIsLoadingBandishes: (loading: boolean) => void
   setBandishError: (error: string | null) => void
+
+  // Taan data state
+  taans: Taan[]
+  isLoadingTaans: boolean
+  taanError: string | null
+  setTaans: (taans: Taan[]) => void
+  addTaan: (taan: Taan) => void
+  updateTaan: (id: string, data: Partial<TaanInput>) => void
+  deleteTaan: (id: string) => void
+  setIsLoadingTaans: (loading: boolean) => void
+  setTaanError: (error: string | null) => void
 }
 
 const useAppStore = create<AppState>((set) => ({
@@ -142,6 +154,34 @@ const useAppStore = create<AppState>((set) => ({
     })),
   setIsLoadingBandishes: (loading) => set({ isLoadingBandishes: loading }),
   setBandishError: (error) => set({ bandishError: error }),
+
+  // Taan data state
+  taans: [],
+  isLoadingTaans: false,
+  taanError: null,
+  setTaans: (taans) => set({ taans }),
+  addTaan: (taan) =>
+    set((state) => ({
+      taans: [taan, ...state.taans],
+    })),
+  updateTaan: (id, data) =>
+    set((state) => ({
+      taans: state.taans.map((taan) =>
+        taan.id === id
+          ? {
+              ...taan,
+              ...data,
+              updatedAt: new Date(),
+            }
+          : taan
+      ),
+    })),
+  deleteTaan: (id) =>
+    set((state) => ({
+      taans: state.taans.filter((taan) => taan.id !== id),
+    })),
+  setIsLoadingTaans: (loading) => set({ isLoadingTaans: loading }),
+  setTaanError: (error) => set({ taanError: error }),
 }))
 
 export default useAppStore
