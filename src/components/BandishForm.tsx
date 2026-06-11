@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Bandish, BandishInput } from '../services/bandishService'
+import NotationEditor from './NotationEditor'
 
 interface BandishFormProps {
   initialData?: Bandish
@@ -113,20 +114,15 @@ export default function BandishForm({ initialData, onSubmit, onCancel }: Bandish
         />
       </div>
 
-      <div>
-        <label htmlFor="notation" className="block text-sm font-medium text-slate-700">
-          Notation
-        </label>
-        <textarea
-          id="notation"
-          name="notation"
-          value={formData.notation}
-          onChange={handleChange}
-          placeholder="Sargam notation"
-          rows={4}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-        />
-      </div>
+      <NotationEditor
+        id="notation"
+        name="notation"
+        value={formData.notation}
+        onChange={handleChange}
+        placeholder="Bandish notation"
+        description="Use swar notation here"
+        rows={4}
+      />
 
       <div>
         <label htmlFor="notes" className="block text-sm font-medium text-slate-700">

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Taan, TaanInput } from '../services/taanService'
+import NotationEditor from './NotationEditor'
 
 interface TaanFormProps {
   initialData?: Taan
@@ -81,20 +82,15 @@ export default function TaanForm({ initialData, onSubmit, onCancel }: TaanFormPr
         />
       </div>
 
-      <div>
-        <label htmlFor="notation" className="block text-sm font-medium text-slate-700">
-          Notation
-        </label>
-        <textarea
-          id="notation"
-          name="notation"
-          value={formData.notation}
-          onChange={handleChange}
-          placeholder="Taan notation"
-          rows={4}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-        />
-      </div>
+      <NotationEditor
+        id="notation"
+        name="notation"
+        value={formData.notation}
+        onChange={handleChange}
+        placeholder="Taan notation"
+        description="Use swar notation here"
+        rows={4}
+      />
 
       <div>
         <label htmlFor="notes" className="block text-sm font-medium text-slate-700">
