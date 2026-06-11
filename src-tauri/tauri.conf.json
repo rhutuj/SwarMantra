@@ -1,0 +1,22 @@
+{
+  "$schema": "https://tauri.app/v1/schema.json",
+  "productName": "Swar Notebook",
+  "version": "0.1.0",
+  "identifier": "com.swarnotebook.app",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev:frontend",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "dist"
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "icon": []
+  },
+  "app": {
+    "windows": [
+      { "label": "main", "title": "Swar Notebook", "width": 1200, "height": 780 }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Raag {
+  id        String     @id @default(uuid())
+  name      String
+  thaat     String?
+  aaroh     String?
+  avroh     String?
+  pakad     String?
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  sargams   Sargam[]
+  bandishes Bandish[]
+}
+
+model Sargam {
+  id        String   @id @default(uuid())
+  raag      Raag     @relation(fields: [raagId], references: [id])
+  raagId    String
+  title     String
+  taal      String?
+  notation  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  taans     Taan[]
+}
+
+model Bandish {
+  id        String   @id @default(uuid())
+  raag      Raag     @relation(fields: [raagId], references: [id])
+  raagId    String
+  title     String
+  taal      String?
+  laya      String?
+  composer  String?
+  lyrics    String?
+  notation  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  taans     Taan[]
+}
+
+model Taan {
+  id          String   @id @default(uuid())
+  title       String
+  taal        String?
+  notation    String?
+  notes       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sargam      Sargam?  @relation(fields: [sargamId], references: [id])
+  sargamId    String?
+  bandish     Bandish? @relation(fields: [bandishId], references: [id])
+  bandishId   String?
+}
