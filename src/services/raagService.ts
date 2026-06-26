@@ -1,12 +1,13 @@
-// Data types for Raag operations
+import { invoke } from '@tauri-apps/api/core'
+
 export interface Raag {
   id: string
   name: string
-  thaat?: string
-  aaroh?: string
-  avroh?: string
-  pakad?: string
-  notes?: string
+  thaat?: string | null
+  aaroh?: string | null
+  avroh?: string | null
+  pakad?: string | null
+  notes?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -20,44 +21,39 @@ export interface RaagInput {
   notes?: string
 }
 
-// Mock data service (will be replaced with Prisma backend)
+type RaagRow = Omit<Raag, 'createdAt' | 'updatedAt'> & {
+  createdAt: string
+  updatedAt: string
+}
+
+const mapDates = (row: RaagRow): Raag => ({
+  ...row,
+  createdAt: new Date(row.createdAt),
+  updatedAt: new Date(row.updatedAt),
+})
+
 export const raagService = {
-  // In V1, this uses in-memory storage via Zustand
-  // Future versions will use Tauri commands + Prisma backend
-  
   async getAllRaags(): Promise<Raag[]> {
-    // Placeholder - will be implemented via Zustand store
-    return []
+    const rows = await invoke<RaagRow[]>('list_raags')
+    return rows.map(mapDates)
   },
 
   async getRaagById(id: string): Promise<Raag | null> {
-    // Placeholder - will be implemented via Zustand store
-    return null
+    const row = await invoke<RaagRow | null>('get_raag', { id })
+    return row ? mapDates(row) : null
   },
 
   async createRaag(data: RaagInput): Promise<Raag> {
-    // Placeholder - will be implemented via Zustand store
-    const now = new Date()
-    return {
-      id: Math.random().toString(36).slice(2),
-      ...data,
-      createdAt: now,
-      updatedAt: now,
-    }
+    const row = await invoke<RaagRow>('create_raag', { input: data })
+    return mapDates(row)
   },
 
-  async updateRaag(id: string, data: Partial<RaagInput>): Promise<Raag> {
-    // Placeholder - will be implemented via Zustand store
-    const now = new Date()
-    return {
-      id,
-      name: data.name || '',
-      createdAt: now,
-      updatedAt: now,
-    }
+  async updateRaag(id: string, data: RaagInput): Promise<Raag> {
+    const row = await invoke<RaagRow>('update_raag', { id, input: data })
+    return mapDates(row)
   },
 
   async deleteRaag(id: string): Promise<void> {
-    // Placeholder - will be implemented via Zustand store
+    await invoke<void>('delete_raag', { id })
   },
 }

@@ -1,10 +1,11 @@
+import { invoke } from '@tauri-apps/api/core'
+
 export interface Taan {
   id: string
-  title: string
-  taal?: string
-  notation?: string
-  notes?: string
-  order: number
+  taal?: string | null
+  notation?: string | null
+  startingMatra: number
+  textNote?: string | null
   sargamId?: string | null
   bandishId?: string | null
   createdAt: Date
@@ -12,53 +13,49 @@ export interface Taan {
 }
 
 export interface TaanInput {
-  title: string
-  taal?: string
   notation?: string
-  notes?: string
-  order?: number
+  startingMatra?: number
+  textNote?: string
 }
+
+type TaanRow = Omit<Taan, 'createdAt' | 'updatedAt'> & {
+  createdAt: string
+  updatedAt: string
+}
+
+const mapDates = (row: TaanRow): Taan => ({
+  ...row,
+  createdAt: new Date(row.createdAt),
+  updatedAt: new Date(row.updatedAt),
+})
 
 export const taanService = {
   async getTaansBySargamId(sargamId: string): Promise<Taan[]> {
-    // Placeholder - will be replaced with Tauri commands
-    return []
+    const rows = await invoke<TaanRow[]>('list_taans_by_sargam', { sargamId })
+    return rows.map(mapDates)
   },
 
   async getTaansByBandishId(bandishId: string): Promise<Taan[]> {
-    // Placeholder - will be replaced with Tauri commands
-    return []
+    const rows = await invoke<TaanRow[]>('list_taans_by_bandish', { bandishId })
+    return rows.map(mapDates)
+  },
+
+  async getTaanById(id: string): Promise<Taan | null> {
+    const row = await invoke<TaanRow | null>('get_taan', { id })
+    return row ? mapDates(row) : null
   },
 
   async createTaan(sargamId: string | null, bandishId: string | null, data: TaanInput): Promise<Taan> {
-    // Placeholder - will be replaced with Tauri commands
-    const now = new Date()
-    return {
-      id: Math.random().toString(36).slice(2),
-      ...data,
-      order: data.order || 0,
-      sargamId: sargamId || null,
-      bandishId: bandishId || null,
-      createdAt: now,
-      updatedAt: now,
-    }
+    const row = await invoke<TaanRow>('create_taan', { sargamId, bandishId, input: data })
+    return mapDates(row)
   },
 
-  async updateTaan(id: string, data: Partial<TaanInput>): Promise<Taan> {
-    // Placeholder - will be replaced with Tauri commands
-    const now = new Date()
-    return {
-      id,
-      title: data.title || '',
-      order: data.order || 0,
-      sargamId: null,
-      bandishId: null,
-      createdAt: now,
-      updatedAt: now,
-    }
+  async updateTaan(id: string, data: TaanInput): Promise<Taan> {
+    const row = await invoke<TaanRow>('update_taan', { id, input: data })
+    return mapDates(row)
   },
 
   async deleteTaan(id: string): Promise<void> {
-    // Placeholder - will be replaced with Tauri commands
+    await invoke<void>('delete_taan', { id })
   },
 }

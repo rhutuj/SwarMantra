@@ -21,7 +21,7 @@ interface AppState {
   raagError: string | null
   setRaags: (raags: Raag[]) => void
   addRaag: (raag: Raag) => void
-  updateRaag: (id: string, data: Partial<RaagInput>) => void
+  updateRaag: (id: string, data: Partial<RaagInput> | Raag) => void
   deleteRaag: (id: string) => void
   setIsLoadingRaags: (loading: boolean) => void
   setRaagError: (error: string | null) => void
@@ -32,7 +32,7 @@ interface AppState {
   sargamError: string | null
   setSargams: (sargams: Sargam[]) => void
   addSargam: (sargam: Sargam) => void
-  updateSargam: (id: string, data: Partial<SargamInput>) => void
+  updateSargam: (id: string, data: Partial<SargamInput> | Sargam) => void
   deleteSargam: (id: string) => void
   setIsLoadingSargams: (loading: boolean) => void
   setSargamError: (error: string | null) => void
@@ -43,7 +43,7 @@ interface AppState {
   bandishError: string | null
   setBandishes: (bandishes: Bandish[]) => void
   addBandish: (bandish: Bandish) => void
-  updateBandish: (id: string, data: Partial<BandishInput>) => void
+  updateBandish: (id: string, data: Partial<BandishInput> | Bandish) => void
   deleteBandish: (id: string) => void
   setIsLoadingBandishes: (loading: boolean) => void
   setBandishError: (error: string | null) => void
@@ -54,7 +54,7 @@ interface AppState {
   taanError: string | null
   setTaans: (taans: Taan[]) => void
   addTaan: (taan: Taan) => void
-  updateTaan: (id: string, data: Partial<TaanInput>) => void
+  updateTaan: (id: string, data: Partial<TaanInput> | Taan) => void
   deleteTaan: (id: string) => void
   setIsLoadingTaans: (loading: boolean) => void
   setTaanError: (error: string | null) => void

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import useAppStore from '../store/appStore'
-import { sargamService, SargamInput } from '../services/sargamService'
-import { bandishService, BandishInput } from '../services/bandishService'
+import { raagService } from '../services/raagService'
+import { sargamService, Sargam, SargamInput } from '../services/sargamService'
+import { bandishService, Bandish, BandishInput } from '../services/bandishService'
+import { swarService } from '../services/swarService'
+import { pdfService } from '../services/pdfService'
+import { useToast } from '../components/Toast'
 import Modal from '../components/Modal'
 import SargamForm from '../components/SargamForm'
 import BandishForm from '../components/BandishForm'
@@ -10,20 +14,66 @@ import BandishForm from '../components/BandishForm'
 export default function RaagPage() {
   const { raagId } = useParams<{ raagId: string }>()
   const navigate = useNavigate()
-  const { raags, sargams, bandishes, addSargam, addBandish, deleteSargam, deleteBandish } = useAppStore()
-  
+  const {
+    raags,
+    sargams,
+    bandishes,
+    addSargam,
+    addBandish,
+    updateSargam,
+    updateBandish,
+    deleteSargam,
+    deleteBandish,
+    setRaags,
+    setSargams,
+    setBandishes,
+  } = useAppStore()
+
   const [activeTab, setActiveTab] = useState<'sargams' | 'bandishes'>('sargams')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingSargam, setEditingSargam] = useState<Sargam | null>(null)
+  const [editingBandish, setEditingBandish] = useState<Bandish | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isExportingSwar, setIsExportingSwar] = useState(false)
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const { addToast } = useToast()
 
   const raag = raags.find((r) => r.id === raagId)
   const raagSargams = sargams.filter((s) => s.raagId === raagId)
   const raagBandishes = bandishes.filter((b) => b.raagId === raagId)
 
   useEffect(() => {
-    if (!raag) {
-      navigate('/')
+    const loadRaagData = async () => {
+      if (!raagId) {
+        navigate('/')
+        return
+      }
+
+      try {
+        const [loadedRaag, loadedSargams, loadedBandishes] = await Promise.all([
+          raagService.getRaagById(raagId),
+          sargamService.getSargamsByRaagId(raagId),
+          bandishService.getBandishesByRaagId(raagId),
+        ])
+
+        if (!loadedRaag) {
+          navigate('/')
+          return
+        }
+
+        setRaags([loadedRaag, ...raags.filter((item) => item.id !== loadedRaag.id)])
+        setSargams([...sargams.filter((item) => item.raagId !== raagId), ...loadedSargams])
+        setBandishes([...bandishes.filter((item) => item.raagId !== raagId), ...loadedBandishes])
+      } catch (error) {
+        console.error('Failed to load Raag details:', error)
+        navigate('/')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [raag, navigate])
+
+    loadRaagData()
+  }, [raagId, navigate])
 
   const handleCreateSargam = async (data: SargamInput) => {
     if (!raagId) return
@@ -47,6 +97,26 @@ export default function RaagPage() {
     }
   }
 
+  const handleUpdateSargam = async (id: string, data: SargamInput) => {
+    try {
+      const savedSargam = await sargamService.updateSargam(id, data)
+      updateSargam(id, savedSargam)
+      setEditingSargam(null)
+    } catch (error) {
+      console.error('Failed to update Sargam:', error)
+    }
+  }
+
+  const handleUpdateBandish = async (id: string, data: BandishInput) => {
+    try {
+      const savedBandish = await bandishService.updateBandish(id, data)
+      updateBandish(id, savedBandish)
+      setEditingBandish(null)
+    } catch (error) {
+      console.error('Failed to update Bandish:', error)
+    }
+  }
+
   const handleDeleteSargam = async (id: string) => {
     if (!confirm('Are you sure you want to delete this Sargam?')) return
     try {
@@ -67,13 +137,42 @@ export default function RaagPage() {
     }
   }
 
-  if (!raag) {
+  const handleExportSwarm = async () => {
+    if (!raagId || isExportingSwar) return
+    setIsExportingSwar(true)
+    try {
+      const saved = await swarService.exportRaagToFile(raagId, `${raag?.name || 'raag'}.swar`)
+      if (saved) {
+        addToast('SWAR file exported successfully', 'success')
+      }
+    } catch (error) {
+      addToast('Failed to export SWAR file', 'error')
+    } finally {
+      setIsExportingSwar(false)
+    }
+  }
+
+  const handleExportPdf = async () => {
+    if (!raag || isExportingPdf) return
+    setIsExportingPdf(true)
+    try {
+      const saved = await pdfService.exportRaagPdfToFile(raag)
+      if (saved) {
+        addToast('PDF exported successfully', 'success')
+      }
+    } catch (error) {
+      addToast('Failed to export PDF', 'error')
+    } finally {
+      setIsExportingPdf(false)
+    }
+  }
+
+  if (isLoading || !raag) {
     return <div className="p-8 text-center text-slate-600">Loading...</div>
   }
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">{raag.name}</h1>
@@ -98,29 +197,42 @@ export default function RaagPage() {
           >
             New Bandish
           </button>
+          <button
+            onClick={handleExportSwarm}
+            disabled={isExportingSwar}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+          >
+            {isExportingSwar ? 'Exporting...' : 'Export .swar'}
+          </button>
+          <button
+            onClick={handleExportPdf}
+            disabled={isExportingPdf}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+          >
+            {isExportingPdf ? 'Generating...' : 'Export PDF'}
+          </button>
         </div>
       </div>
 
-      {/* Raag Information */}
       <div className="space-y-6">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">Raag Information</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <h3 className="text-sm font-medium text-slate-500">Thaat</h3>
-              <p className="mt-2 text-slate-700">{raag.thaat || '—'}</p>
+              <p className="mt-2 text-slate-700">{raag.thaat || '-'}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-slate-500">Aaroh</h3>
-              <p className="mt-2 font-mono text-slate-700">{raag.aaroh || '—'}</p>
+              <p className="mt-2 font-mono text-slate-700">{raag.aaroh || '-'}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-slate-500">Avroh</h3>
-              <p className="mt-2 font-mono text-slate-700">{raag.avroh || '—'}</p>
+              <p className="mt-2 font-mono text-slate-700">{raag.avroh || '-'}</p>
             </div>
             <div className="sm:col-span-2 lg:col-span-3">
               <h3 className="text-sm font-medium text-slate-500">Pakad</h3>
-              <p className="mt-2 font-mono text-slate-700">{raag.pakad || '—'}</p>
+              <p className="mt-2 font-mono text-slate-700">{raag.pakad || '-'}</p>
             </div>
             {raag.notes && (
               <div className="sm:col-span-2 lg:col-span-3">
@@ -131,7 +243,6 @@ export default function RaagPage() {
           </div>
         </section>
 
-        {/* Tabs */}
         <div className="border-b border-slate-200">
           <div className="flex gap-4">
             <button
@@ -157,7 +268,6 @@ export default function RaagPage() {
           </div>
         </div>
 
-        {/* Sargams Tab */}
         {activeTab === 'sargams' && (
           <div>
             {raagSargams.length === 0 ? (
@@ -185,6 +295,12 @@ export default function RaagPage() {
                         View
                       </button>
                       <button
+                        onClick={() => setEditingSargam(sargam)}
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleDeleteSargam(sargam.id)}
                         className="rounded-lg border border-red-300 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
                       >
@@ -198,7 +314,6 @@ export default function RaagPage() {
           </div>
         )}
 
-        {/* Bandishes Tab */}
         {activeTab === 'bandishes' && (
           <div>
             {raagBandishes.length === 0 ? (
@@ -227,6 +342,12 @@ export default function RaagPage() {
                         View
                       </button>
                       <button
+                        onClick={() => setEditingBandish(bandish)}
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleDeleteBandish(bandish.id)}
                         className="rounded-lg border border-red-300 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
                       >
@@ -241,14 +362,12 @@ export default function RaagPage() {
         )}
       </div>
 
-      {/* Back Button */}
       <div className="mt-8">
         <Link to="/" className="text-sm text-slate-600 underline hover:text-slate-900">
-          ← Back to dashboard
+          Back to dashboard
         </Link>
       </div>
 
-      {/* Sargam Modal */}
       <Modal
         isOpen={isCreateModalOpen && activeTab === 'sargams'}
         title="Create New Sargam"
@@ -257,7 +376,6 @@ export default function RaagPage() {
         <SargamForm onSubmit={handleCreateSargam} onCancel={() => setIsCreateModalOpen(false)} />
       </Modal>
 
-      {/* Bandish Modal */}
       <Modal
         isOpen={isCreateModalOpen && activeTab === 'bandishes'}
         title="Create New Bandish"
@@ -265,7 +383,26 @@ export default function RaagPage() {
       >
         <BandishForm onSubmit={handleCreateBandish} onCancel={() => setIsCreateModalOpen(false)} />
       </Modal>
+
+      <Modal isOpen={!!editingSargam} title="Edit Sargam" onClose={() => setEditingSargam(null)}>
+        {editingSargam && (
+          <SargamForm
+            initialData={editingSargam}
+            onSubmit={(data) => handleUpdateSargam(editingSargam.id, data)}
+            onCancel={() => setEditingSargam(null)}
+          />
+        )}
+      </Modal>
+
+      <Modal isOpen={!!editingBandish} title="Edit Bandish" onClose={() => setEditingBandish(null)}>
+        {editingBandish && (
+          <BandishForm
+            initialData={editingBandish}
+            onSubmit={(data) => handleUpdateBandish(editingBandish.id, data)}
+            onCancel={() => setEditingBandish(null)}
+          />
+        )}
+      </Modal>
     </div>
   )
 }
-

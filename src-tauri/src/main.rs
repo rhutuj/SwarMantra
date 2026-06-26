@@ -59,11 +59,17 @@ struct SwarBandish {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct SwarTaan {
-    title: String,
     notation: Option<String>,
-    notes: Option<String>,
-    order: i64,
-    starting_beat: i64,
+    starting_matra: i64,
+    text_note: Option<String>,
+}
+
+fn taan_to_swar_taan(taan: &TaanRow) -> SwarTaan {
+    SwarTaan {
+        notation: taan.notation.clone(),
+        starting_matra: taan.starting_matra,
+        text_note: taan.text_note.clone(),
+    }
 }
 
 #[tauri::command]
@@ -84,13 +90,7 @@ fn export_raag_swar(raag_id: String, db: State<'_, AppDb>) -> Result<String, Str
                 starting_beat: s.starting_beat,
                 taans: taans
                     .iter()
-                    .map(|t| SwarTaan {
-                        title: t.title.clone(),
-                        notation: t.notation.clone(),
-                        notes: t.notes.clone(),
-                        order: t.order,
-                        starting_beat: t.starting_beat,
-                    })
+                    .map(taan_to_swar_taan)
                     .collect(),
             }
         })
@@ -111,13 +111,7 @@ fn export_raag_swar(raag_id: String, db: State<'_, AppDb>) -> Result<String, Str
                 starting_beat: b.starting_beat,
                 taans: taans
                     .iter()
-                    .map(|t| SwarTaan {
-                        title: t.title.clone(),
-                        notation: t.notation.clone(),
-                        notes: t.notes.clone(),
-                        order: t.order,
-                        starting_beat: t.starting_beat,
-                    })
+                    .map(taan_to_swar_taan)
                     .collect(),
             }
         })
@@ -135,6 +129,190 @@ fn export_raag_swar(raag_id: String, db: State<'_, AppDb>) -> Result<String, Str
             sargams: swar_sargams,
             bandishes: swar_bandishes,
         }],
+    };
+
+    serde_json::to_string_pretty(&export).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_sargam_swar(sargam_id: String, db: State<'_, AppDb>) -> Result<String, String> {
+    let sargam = db.get_sargam(&sargam_id)?.ok_or("Sargam not found")?;
+    let raag = db.get_raag(&sargam.raag_id)?.ok_or("Raag not found")?;
+    let taans = db.list_taans_by_sargam(&sargam_id)?;
+
+    let swar_sargam = SwarSargam {
+        title: sargam.title,
+        taal: sargam.taal,
+        notation: sargam.notation,
+        notes: sargam.notes,
+        starting_beat: sargam.starting_beat,
+        taans: taans.iter().map(taan_to_swar_taan).collect(),
+    };
+
+    let export = SwarExport {
+        format: "swar-1.0".to_string(),
+        raags: vec![SwarRaag {
+            name: raag.name,
+            thaat: raag.thaat,
+            aaroh: raag.aaroh,
+            avroh: raag.avroh,
+            pakad: raag.pakad,
+            notes: raag.notes,
+            sargams: vec![swar_sargam],
+            bandishes: vec![],
+        }],
+    };
+
+    serde_json::to_string_pretty(&export).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_bandish_swar(bandish_id: String, db: State<'_, AppDb>) -> Result<String, String> {
+    let bandish = db.get_bandish(&bandish_id)?.ok_or("Bandish not found")?;
+    let raag = db.get_raag(&bandish.raag_id)?.ok_or("Raag not found")?;
+    let taans = db.list_taans_by_bandish(&bandish_id)?;
+
+    let swar_bandish = SwarBandish {
+        title: bandish.title,
+        taal: bandish.taal,
+        laya: bandish.laya,
+        composer: bandish.composer,
+        lyrics: bandish.lyrics,
+        notation: bandish.notation,
+        notes: bandish.notes,
+        starting_beat: bandish.starting_beat,
+        taans: taans.iter().map(taan_to_swar_taan).collect(),
+    };
+
+    let export = SwarExport {
+        format: "swar-1.0".to_string(),
+        raags: vec![SwarRaag {
+            name: raag.name,
+            thaat: raag.thaat,
+            aaroh: raag.aaroh,
+            avroh: raag.avroh,
+            pakad: raag.pakad,
+            notes: raag.notes,
+            sargams: vec![],
+            bandishes: vec![swar_bandish],
+        }],
+    };
+
+    serde_json::to_string_pretty(&export).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_taan_swar(taan_id: String, db: State<'_, AppDb>) -> Result<String, String> {
+    let taan = db.get_taan(&taan_id)?.ok_or("Taan not found")?;
+
+    let (raag_id, swar_sargams, swar_bandishes) = if let Some(sargam_id) = taan.sargam_id.as_ref() {
+        let sargam = db.get_sargam(sargam_id)?.ok_or("Sargam not found")?;
+        let taans = db.list_taans_by_sargam(sargam_id)?;
+        let swar_sargam = SwarSargam {
+            title: sargam.title,
+            taal: sargam.taal,
+            notation: sargam.notation,
+            notes: sargam.notes,
+            starting_beat: sargam.starting_beat,
+            taans: taans.iter().map(taan_to_swar_taan).collect(),
+        };
+        (sargam.raag_id, vec![swar_sargam], vec![])
+    } else if let Some(bandish_id) = taan.bandish_id.as_ref() {
+        let bandish = db.get_bandish(bandish_id)?.ok_or("Bandish not found")?;
+        let taans = db.list_taans_by_bandish(bandish_id)?;
+        let swar_bandish = SwarBandish {
+            title: bandish.title,
+            taal: bandish.taal,
+            laya: bandish.laya,
+            composer: bandish.composer,
+            lyrics: bandish.lyrics,
+            notation: bandish.notation,
+            notes: bandish.notes,
+            starting_beat: bandish.starting_beat,
+            taans: taans.iter().map(taan_to_swar_taan).collect(),
+        };
+        (bandish.raag_id, vec![], vec![swar_bandish])
+    } else {
+        return Err("Taan must have a parent".to_string());
+    };
+
+    let raag = db.get_raag(&raag_id)?.ok_or("Raag not found")?;
+    let export = SwarExport {
+        format: "swar-1.0".to_string(),
+        raags: vec![SwarRaag {
+            name: raag.name,
+            thaat: raag.thaat,
+            aaroh: raag.aaroh,
+            avroh: raag.avroh,
+            pakad: raag.pakad,
+            notes: raag.notes,
+            sargams: swar_sargams,
+            bandishes: swar_bandishes,
+        }],
+    };
+
+    serde_json::to_string_pretty(&export).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_library_swar(db: State<'_, AppDb>) -> Result<String, String> {
+    let raags = db.list_raags()?;
+
+    let swar_raags: Vec<SwarRaag> = raags
+        .iter()
+        .map(|raag| {
+            let sargams = db.list_sargams_by_raag(&raag.id).unwrap_or_default();
+            let bandishes = db.list_bandishes_by_raag(&raag.id).unwrap_or_default();
+
+            let swar_sargams: Vec<SwarSargam> = sargams
+                .iter()
+                .map(|s| {
+                    let taans = db.list_taans_by_sargam(&s.id).unwrap_or_default();
+                    SwarSargam {
+                        title: s.title.clone(),
+                        taal: s.taal.clone(),
+                        notation: s.notation.clone(),
+                        notes: s.notes.clone(),
+                        starting_beat: s.starting_beat,
+                        taans: taans.iter().map(taan_to_swar_taan).collect(),
+                    }
+                })
+                .collect();
+
+            let swar_bandishes: Vec<SwarBandish> = bandishes
+                .iter()
+                .map(|b| {
+                    let taans = db.list_taans_by_bandish(&b.id).unwrap_or_default();
+                    SwarBandish {
+                        title: b.title.clone(),
+                        taal: b.taal.clone(),
+                        laya: b.laya.clone(),
+                        composer: b.composer.clone(),
+                        lyrics: b.lyrics.clone(),
+                        notation: b.notation.clone(),
+                        notes: b.notes.clone(),
+                        starting_beat: b.starting_beat,
+                        taans: taans.iter().map(taan_to_swar_taan).collect(),
+                    }
+                })
+                .collect();
+
+            SwarRaag {
+                name: raag.name.clone(),
+                thaat: raag.thaat.clone(),
+                aaroh: raag.aaroh.clone(),
+                avroh: raag.avroh.clone(),
+                pakad: raag.pakad.clone(),
+                notes: raag.notes.clone(),
+                sargams: swar_sargams,
+                bandishes: swar_bandishes,
+            }
+        })
+        .collect();
+
+    let export = SwarExport {
+        format: "swar-1.0".to_string(),
+        raags: swar_raags,
     };
 
     serde_json::to_string_pretty(&export).map_err(|e| e.to_string())
@@ -196,13 +374,11 @@ struct SwarBandishInput {
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SwarTaanInput {
-    title: String,
     notation: Option<String>,
-    notes: Option<String>,
     #[serde(default)]
-    order: i64,
-    #[serde(default = "default_starting_beat")]
-    starting_beat: i64,
+    starting_matra: i64,
+    #[serde(default)]
+    text_note: Option<String>,
 }
 
 fn default_starting_beat() -> i64 {
@@ -221,7 +397,8 @@ fn read_file(path: String) -> Result<String, String> {
 
 #[tauri::command]
 fn import_swar(json: String, db: State<'_, AppDb>) -> Result<Vec<RaagRow>, String> {
-    let file: SwarFile = serde_json::from_str(&json).map_err(|e| format!("Invalid SWAR file: {e}"))?;
+    let file: SwarFile =
+        serde_json::from_str(&json).map_err(|e| format!("Invalid SWAR file: {e}"))?;
     let mut created_raags = Vec::new();
 
     for raag_input in file.raags {
@@ -251,11 +428,9 @@ fn import_swar(json: String, db: State<'_, AppDb>) -> Result<Vec<RaagRow>, Strin
                     Some(&sargam.id),
                     None,
                     TaanInput {
-                        title: t.title,
                         notation: t.notation,
-                        notes: t.notes,
-                        order: Some(t.order),
-                        starting_beat: Some(t.starting_beat),
+                        text_note: t.text_note,
+                        starting_matra: Some(t.starting_matra),
                     },
                 )?;
             }
@@ -281,11 +456,9 @@ fn import_swar(json: String, db: State<'_, AppDb>) -> Result<Vec<RaagRow>, Strin
                     None,
                     Some(&bandish.id),
                     TaanInput {
-                        title: t.title,
                         notation: t.notation,
-                        notes: t.notes,
-                        order: Some(t.order),
-                        starting_beat: Some(t.starting_beat),
+                        text_note: t.text_note,
+                        starting_matra: Some(t.starting_matra),
                     },
                 )?;
             }
@@ -463,6 +636,10 @@ fn main() {
             update_taan,
             delete_taan,
             export_raag_swar,
+            export_sargam_swar,
+            export_bandish_swar,
+            export_taan_swar,
+            export_library_swar,
             import_swar,
             save_file,
             read_file

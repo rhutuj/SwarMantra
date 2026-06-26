@@ -1,13 +1,16 @@
+import { invoke } from '@tauri-apps/api/core'
+
 export interface Bandish {
   id: string
   raagId: string
   title: string
-  taal?: string
-  laya?: string
-  composer?: string
-  lyrics?: string
-  notation?: string
-  notes?: string
+  taal?: string | null
+  laya?: string | null
+  composer?: string | null
+  lyrics?: string | null
+  notation?: string | null
+  notes?: string | null
+  startingBeat: number
   createdAt: Date
   updatedAt: Date
 }
@@ -20,39 +23,42 @@ export interface BandishInput {
   lyrics?: string
   notation?: string
   notes?: string
+  startingBeat?: number
 }
+
+type BandishRow = Omit<Bandish, 'createdAt' | 'updatedAt'> & {
+  createdAt: string
+  updatedAt: string
+}
+
+const mapDates = (row: BandishRow): Bandish => ({
+  ...row,
+  createdAt: new Date(row.createdAt),
+  updatedAt: new Date(row.updatedAt),
+})
 
 export const bandishService = {
   async getBandishesByRaagId(raagId: string): Promise<Bandish[]> {
-    // Placeholder - will be replaced with Tauri commands
-    return []
+    const rows = await invoke<BandishRow[]>('list_bandishes_by_raag', { raagId })
+    return rows.map(mapDates)
+  },
+
+  async getBandishById(id: string): Promise<Bandish | null> {
+    const row = await invoke<BandishRow | null>('get_bandish', { id })
+    return row ? mapDates(row) : null
   },
 
   async createBandish(raagId: string, data: BandishInput): Promise<Bandish> {
-    // Placeholder - will be replaced with Tauri commands
-    const now = new Date()
-    return {
-      id: Math.random().toString(36).slice(2),
-      raagId,
-      ...data,
-      createdAt: now,
-      updatedAt: now,
-    }
+    const row = await invoke<BandishRow>('create_bandish', { raagId, input: data })
+    return mapDates(row)
   },
 
-  async updateBandish(id: string, data: Partial<BandishInput>): Promise<Bandish> {
-    // Placeholder - will be replaced with Tauri commands
-    const now = new Date()
-    return {
-      id,
-      raagId: '',
-      title: data.title || '',
-      createdAt: now,
-      updatedAt: now,
-    }
+  async updateBandish(id: string, data: BandishInput): Promise<Bandish> {
+    const row = await invoke<BandishRow>('update_bandish', { id, input: data })
+    return mapDates(row)
   },
 
   async deleteBandish(id: string): Promise<void> {
-    // Placeholder - will be replaced with Tauri commands
+    await invoke<void>('delete_bandish', { id })
   },
 }

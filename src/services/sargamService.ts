@@ -1,10 +1,13 @@
+import { invoke } from '@tauri-apps/api/core'
+
 export interface Sargam {
   id: string
   raagId: string
   title: string
-  taal?: string
-  notation?: string
-  notes?: string
+  taal?: string | null
+  notation?: string | null
+  notes?: string | null
+  startingBeat: number
   createdAt: Date
   updatedAt: Date
 }
@@ -14,39 +17,42 @@ export interface SargamInput {
   taal?: string
   notation?: string
   notes?: string
+  startingBeat?: number
 }
+
+type SargamRow = Omit<Sargam, 'createdAt' | 'updatedAt'> & {
+  createdAt: string
+  updatedAt: string
+}
+
+const mapDates = (row: SargamRow): Sargam => ({
+  ...row,
+  createdAt: new Date(row.createdAt),
+  updatedAt: new Date(row.updatedAt),
+})
 
 export const sargamService = {
   async getSargamsByRaagId(raagId: string): Promise<Sargam[]> {
-    // Placeholder - will be replaced with Tauri commands
-    return []
+    const rows = await invoke<SargamRow[]>('list_sargams_by_raag', { raagId })
+    return rows.map(mapDates)
+  },
+
+  async getSargamById(id: string): Promise<Sargam | null> {
+    const row = await invoke<SargamRow | null>('get_sargam', { id })
+    return row ? mapDates(row) : null
   },
 
   async createSargam(raagId: string, data: SargamInput): Promise<Sargam> {
-    // Placeholder - will be replaced with Tauri commands
-    const now = new Date()
-    return {
-      id: Math.random().toString(36).slice(2),
-      raagId,
-      ...data,
-      createdAt: now,
-      updatedAt: now,
-    }
+    const row = await invoke<SargamRow>('create_sargam', { raagId, input: data })
+    return mapDates(row)
   },
 
-  async updateSargam(id: string, data: Partial<SargamInput>): Promise<Sargam> {
-    // Placeholder - will be replaced with Tauri commands
-    const now = new Date()
-    return {
-      id,
-      raagId: '',
-      title: data.title || '',
-      createdAt: now,
-      updatedAt: now,
-    }
+  async updateSargam(id: string, data: SargamInput): Promise<Sargam> {
+    const row = await invoke<SargamRow>('update_sargam', { id, input: data })
+    return mapDates(row)
   },
 
   async deleteSargam(id: string): Promise<void> {
-    // Placeholder - will be replaced with Tauri commands
+    await invoke<void>('delete_sargam', { id })
   },
 }
