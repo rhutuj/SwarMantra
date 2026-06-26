@@ -11,8 +11,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app"],
-    "icon": []
+    "targets": ["app", "msi", "nsis"],
+    "icon": ["icons/icon.png"],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
   },
   "app": {
     "windows": [
