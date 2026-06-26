@@ -31,9 +31,31 @@ export const TAALS: Record<string, TaalConfig> = {
       { matras: 3, marker: '4', type: 'normal' },
     ],
   },
+  Ektaal: {
+    name: 'Ektaal',
+    totalMatras: 12,
+    vibhags: [
+      { matras: 2, marker: 'X', type: 'sam' },
+      { matras: 2, marker: '2', type: 'normal' },
+      { matras: 2, marker: 'O', type: 'khali' },
+      { matras: 2, marker: '3', type: 'normal' },
+      { matras: 2, marker: '4', type: 'normal' },
+      { matras: 2, marker: 'O', type: 'khali' },
+    ],
+  },
+  Rupak: {
+    name: 'Rupak',
+    totalMatras: 7,
+    vibhags: [
+      { matras: 3, marker: 'O', type: 'khali' },
+      { matras: 2, marker: '2', type: 'normal' },
+      { matras: 2, marker: '3', type: 'normal' },
+    ],
+  },
 }
 
-export function getTaalConfig(taalName: string): TaalConfig | null {
+export function getTaalConfig(taalName?: string | null): TaalConfig | null {
+  if (!taalName) return null
   return TAALS[taalName] || null
 }
 

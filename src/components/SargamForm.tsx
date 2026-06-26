@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, useState } from 'react'
 import { Sargam, SargamInput } from '../services/sargamService'
 import NotationEditor from './NotationEditor'
+import { TAALS, getTaalConfig } from '../utils/taalConfig'
 
 interface SargamFormProps {
   initialData?: Sargam
@@ -64,8 +65,11 @@ export default function SargamForm({ initialData, onSubmit, onCancel }: SargamFo
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
           >
             <option value="">Select Taal (optional)</option>
-            <option value="Teentaal">Teentaal (16 matras)</option>
-            <option value="Jhaptaal">Jhaptaal (10 matras)</option>
+            {Object.entries(TAALS).map(([key, config]) => (
+              <option key={key} value={key}>
+                {config.name} ({config.totalMatras} matras)
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -79,7 +83,7 @@ export default function SargamForm({ initialData, onSubmit, onCancel }: SargamFo
             value={formData.startingBeat}
             onChange={handleChange}
             min={1}
-            max={formData.taal === 'Teentaal' ? 16 : formData.taal === 'Jhaptaal' ? 10 : 16}
+            max={getTaalConfig(formData.taal)?.totalMatras ?? 16}
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
           />
         </div>
