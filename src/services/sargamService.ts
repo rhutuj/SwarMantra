@@ -5,7 +5,8 @@ export interface Sargam {
   raagId: string
   title: string
   taal?: string | null
-  notation?: string | null
+  asthayi?: string | null
+  antara?: string | null
   notes?: string | null
   startingBeat: number
   createdAt: Date
@@ -15,7 +16,8 @@ export interface Sargam {
 export interface SargamInput {
   title: string
   taal?: string
-  notation?: string
+  asthayi?: string
+  antara?: string
   notes?: string
   startingBeat?: number
 }

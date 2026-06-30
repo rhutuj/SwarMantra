@@ -18,7 +18,20 @@ export const TAALS: Record<string, TaalConfig> = {
       { matras: 4, marker: 'X', type: 'sam' },
       { matras: 4, marker: '2', type: 'normal' },
       { matras: 4, marker: 'O', type: 'khali' },
-      { matras: 4, marker: '4', type: 'normal' },
+      { matras: 4, marker: '3', type: 'normal' },
+    ],
+  },
+  AdaChautaal: {
+    name: 'Ada Chautaal',
+    totalMatras: 14,
+    vibhags: [
+      { matras: 2, marker: 'X', type: 'sam' },
+      { matras: 2, marker: '2', type: 'normal' },
+      { matras: 2, marker: 'O', type: 'khali' },
+      { matras: 2, marker: '3', type: 'normal' },
+      { matras: 2, marker: '4', type: 'normal' },
+      { matras: 2, marker: '5', type: 'normal' },
+      { matras: 2, marker: '6', type: 'normal' },
     ],
   },
   Jhaptaal: {
@@ -50,6 +63,16 @@ export const TAALS: Record<string, TaalConfig> = {
       { matras: 3, marker: 'O', type: 'khali' },
       { matras: 2, marker: '2', type: 'normal' },
       { matras: 2, marker: '3', type: 'normal' },
+    ],
+  },
+  Matta: {
+    name: 'Matta',
+    totalMatras: 9,
+    vibhags: [
+      { matras: 2, marker: 'X', type: 'sam' },
+      { matras: 2, marker: '2', type: 'normal' },
+      { matras: 2, marker: 'O', type: 'khali' },
+      { matras: 3, marker: '3', type: 'normal' },
     ],
   },
 }

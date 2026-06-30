@@ -25,8 +25,9 @@ export default function BandishPage() {
   const { addToast } = useToast()
 
   // Notation edit state
-  const [isEditingNotation, setIsEditingNotation] = useState(false)
-  const [draftNotation, setDraftNotation] = useState('')
+  const [editingSection, setEditingSection] = useState<'asthayi' | 'antara' | null>(null)
+  const [draftAsthayi, setDraftAsthayi] = useState('')
+  const [draftAntara, setDraftAntara] = useState('')
 
   // Taan notation edit state
   const [editingTaanNotationId, setEditingTaanNotationId] = useState<string | null>(null)
@@ -69,14 +70,16 @@ export default function BandishPage() {
     loadBandishData()
   }, [bandishId, navigate])
 
-  const enterEditMode = () => {
-    setDraftNotation(bandish?.notation || '')
-    setIsEditingNotation(true)
+  const enterEditMode = (section: 'asthayi' | 'antara') => {
+    setDraftAsthayi(bandish?.asthayi || '')
+    setDraftAntara(bandish?.antara || '')
+    setEditingSection(section)
   }
 
   const cancelEdit = () => {
-    setIsEditingNotation(false)
-    setDraftNotation('')
+    setEditingSection(null)
+    setDraftAsthayi('')
+    setDraftAntara('')
   }
 
   const saveNotation = async () => {
@@ -88,12 +91,13 @@ export default function BandishPage() {
         laya: bandish.laya ?? undefined,
         composer: bandish.composer ?? undefined,
         lyrics: bandish.lyrics ?? undefined,
-        notation: draftNotation,
+        asthayi: draftAsthayi,
+        antara: draftAntara,
         notes: bandish.notes ?? undefined,
         startingBeat: bandish.startingBeat,
       })
       updateBandish(bandish.id, saved)
-      setIsEditingNotation(false)
+      setEditingSection(null)
     } catch (error) {
       console.error('Failed to save notation:', error)
     }
@@ -232,14 +236,14 @@ export default function BandishPage() {
             </div>
           )}
           {bandishTaal && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-slate-500">Notation</h3>
                 <div className="flex rounded-lg border border-slate-300 bg-slate-50 p-0.5">
                   <button
-                    onClick={() => setIsEditingNotation(false)}
+                    onClick={() => setEditingSection(null)}
                     className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                      !isEditingNotation
+                      !editingSection
                         ? 'bg-white text-slate-900 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
@@ -247,9 +251,9 @@ export default function BandishPage() {
                     View
                   </button>
                   <button
-                    onClick={enterEditMode}
+                    onClick={() => enterEditMode('asthayi')}
                     className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                      isEditingNotation
+                      editingSection === 'asthayi'
                         ? 'bg-white text-slate-900 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
@@ -258,17 +262,28 @@ export default function BandishPage() {
                   </button>
                 </div>
               </div>
-              <div className="mt-2">
+              <div>
+                <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Asthayi</h4>
                 <NotationEditor
                   taal={bandishTaal}
                   startingBeat={bandish.startingBeat}
-                  value={isEditingNotation ? draftNotation : (bandish.notation ?? undefined)}
-                  onChange={setDraftNotation}
-                  readOnly={!isEditingNotation}
+                  value={editingSection ? draftAsthayi : (bandish.asthayi ?? undefined)}
+                  onChange={setDraftAsthayi}
+                  readOnly={!editingSection}
                 />
               </div>
-              {isEditingNotation && (
-                <div className="mt-3 flex gap-2">
+              <div>
+                <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Antara</h4>
+                <NotationEditor
+                  taal={bandishTaal}
+                  startingBeat={bandish.startingBeat}
+                  value={editingSection ? draftAntara : (bandish.antara ?? undefined)}
+                  onChange={setDraftAntara}
+                  readOnly={!editingSection}
+                />
+              </div>
+              {editingSection && (
+                <div className="flex gap-2">
                   <button
                     onClick={saveNotation}
                     className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"

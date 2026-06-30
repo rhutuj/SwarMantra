@@ -8,7 +8,8 @@ export interface Bandish {
   laya?: string | null
   composer?: string | null
   lyrics?: string | null
-  notation?: string | null
+  asthayi?: string | null
+  antara?: string | null
   notes?: string | null
   startingBeat: number
   createdAt: Date
@@ -21,7 +22,8 @@ export interface BandishInput {
   laya?: string
   composer?: string
   lyrics?: string
-  notation?: string
+  asthayi?: string
+  antara?: string
   notes?: string
   startingBeat?: number
 }

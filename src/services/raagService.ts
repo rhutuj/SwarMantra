@@ -7,6 +7,11 @@ export interface Raag {
   aaroh?: string | null
   avroh?: string | null
   pakad?: string | null
+  vadi?: string | null
+  samvadi?: string | null
+  komalSur?: string | null
+  tivraSur?: string | null
+  jati?: string | null
   notes?: string | null
   createdAt: Date
   updatedAt: Date
@@ -18,6 +23,11 @@ export interface RaagInput {
   aaroh?: string
   avroh?: string
   pakad?: string
+  vadi?: string
+  samvadi?: string
+  komalSur?: string
+  tivraSur?: string
+  jati?: string
   notes?: string
 }
 

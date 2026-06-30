@@ -16,7 +16,8 @@ export default function BandishForm({ initialData, onSubmit, onCancel }: Bandish
     laya: initialData?.laya || '',
     composer: initialData?.composer || '',
     lyrics: initialData?.lyrics || '',
-    notation: initialData?.notation || '',
+    asthayi: initialData?.asthayi || '',
+    antara: initialData?.antara || '',
     notes: initialData?.notes || '',
     startingBeat: initialData?.startingBeat || 1,
   })
@@ -137,15 +138,26 @@ export default function BandishForm({ initialData, onSubmit, onCancel }: Bandish
       </div>
 
       {formData.taal && (
-        <NotationEditor
-          id="notation"
-          name="notation"
-          taal={formData.taal}
-          startingBeat={formData.startingBeat || 1}
-          value={formData.notation}
-          onChange={(val) => setFormData((prev) => ({ ...prev, notation: val }))}
-          description="Use swar notation here"
-        />
+        <>
+          <NotationEditor
+            id="asthayi"
+            name="asthayi"
+            taal={formData.taal}
+            startingBeat={formData.startingBeat || 1}
+            value={formData.asthayi}
+            onChange={(val) => setFormData((prev) => ({ ...prev, asthayi: val }))}
+            description="Asthayi — first section (lower/middle octave)"
+          />
+          <NotationEditor
+            id="antara"
+            name="antara"
+            taal={formData.taal}
+            startingBeat={formData.startingBeat || 1}
+            value={formData.antara}
+            onChange={(val) => setFormData((prev) => ({ ...prev, antara: val }))}
+            description="Antara — second section (higher octave)"
+          />
+        </>
       )}
 
       <div>

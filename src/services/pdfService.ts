@@ -325,7 +325,7 @@ function drawNotation(
 /* ──────────────────────── PDF Builders ──────────────────────── */
 
 async function buildRaagPdf(
-  raag: { id: string; name: string; thaat?: string | null; aaroh?: string | null; avroh?: string | null; pakad?: string | null; notes?: string | null }
+  raag: { id: string; name: string; thaat?: string | null; aaroh?: string | null; avroh?: string | null; pakad?: string | null; vadi?: string | null; samvadi?: string | null; komalSur?: string | null; tivraSur?: string | null; jati?: string | null; notes?: string | null }
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   const font = await doc.embedFont(StandardFonts.Helvetica)
@@ -337,6 +337,11 @@ async function buildRaagPdf(
   drawDivider(ctx)
 
   if (raag.thaat) drawPair(ctx, 'Thaat', raag.thaat)
+  if (raag.vadi) drawPair(ctx, 'Vadi', raag.vadi)
+  if (raag.samvadi) drawPair(ctx, 'Samvadi', raag.samvadi)
+  if (raag.komalSur) drawPair(ctx, 'Komal Sur', raag.komalSur)
+  if (raag.tivraSur) drawPair(ctx, 'Tivra Sur', raag.tivraSur)
+  if (raag.jati) drawPair(ctx, 'Jati', raag.jati)
   drawPair(ctx, 'Aaroh', raag.aaroh)
   drawPair(ctx, 'Avroh', raag.avroh)
   drawPair(ctx, 'Pakad', raag.pakad)
@@ -356,7 +361,16 @@ async function buildRaagPdf(
         drawDivider(ctx)
         if (s.taal) drawPair(ctx, 'Taal', s.taal)
         if (s.notes) { checkSpace(ctx, 20); drawText(ctx, s.notes, ctx.fontSize - 1) }
-        drawNotation(ctx, s.notation, s.startingBeat, s.taal)
+        if (s.asthayi) {
+          checkSpace(ctx, 20)
+          drawLabel(ctx, 'Asthayi')
+          drawNotation(ctx, s.asthayi, s.startingBeat, s.taal)
+        }
+        if (s.antara) {
+          checkSpace(ctx, 20)
+          drawLabel(ctx, 'Antara')
+          drawNotation(ctx, s.antara, s.startingBeat, s.taal)
+        }
 
         const taans = await taanService.getTaansBySargamId(s.id)
         for (const t of taans) {
@@ -385,7 +399,16 @@ async function buildRaagPdf(
           drawLabel(ctx, 'Lyrics')
           drawText(ctx, b.lyrics, ctx.fontSize - 1)
         }
-        drawNotation(ctx, b.notation, b.startingBeat, b.taal)
+        if (b.asthayi) {
+          checkSpace(ctx, 20)
+          drawLabel(ctx, 'Asthayi')
+          drawNotation(ctx, b.asthayi, b.startingBeat, b.taal)
+        }
+        if (b.antara) {
+          checkSpace(ctx, 20)
+          drawLabel(ctx, 'Antara')
+          drawNotation(ctx, b.antara, b.startingBeat, b.taal)
+        }
         if (b.notes) { checkSpace(ctx, 20); drawText(ctx, b.notes, ctx.fontSize - 1) }
 
         const taans = await taanService.getTaansByBandishId(b.id)
@@ -403,7 +426,7 @@ async function buildRaagPdf(
 }
 
 async function buildSargamPdf(
-  sargam: { id: string; title: string; taal?: string | null; notation?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+  sargam: { id: string; title: string; taal?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
   raag: { name: string },
   taans: Taan[]
 ): Promise<Uint8Array> {
@@ -424,7 +447,16 @@ async function buildSargamPdf(
     drawText(ctx, sargam.notes, ctx.fontSize)
   }
 
-  drawNotation(ctx, sargam.notation, sargam.startingBeat, sargam.taal)
+  if (sargam.asthayi) {
+    checkSpace(ctx, 20)
+    drawLabel(ctx, 'Asthayi')
+    drawNotation(ctx, sargam.asthayi, sargam.startingBeat, sargam.taal)
+  }
+  if (sargam.antara) {
+    checkSpace(ctx, 20)
+    drawLabel(ctx, 'Antara')
+    drawNotation(ctx, sargam.antara, sargam.startingBeat, sargam.taal)
+  }
 
   if (taans.length > 0) {
     drawSectionHeader(ctx, 'TAANS')
@@ -449,7 +481,7 @@ async function buildSargamPdf(
 }
 
 async function buildBandishPdf(
-  bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; notation?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+  bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
   raag: { name: string },
   taans: Taan[]
 ): Promise<Uint8Array> {
@@ -477,7 +509,16 @@ async function buildBandishPdf(
     drawText(ctx, bandish.notes, ctx.fontSize)
   }
 
-  drawNotation(ctx, bandish.notation, bandish.startingBeat, bandish.taal)
+  if (bandish.asthayi) {
+    checkSpace(ctx, 20)
+    drawLabel(ctx, 'Asthayi')
+    drawNotation(ctx, bandish.asthayi, bandish.startingBeat, bandish.taal)
+  }
+  if (bandish.antara) {
+    checkSpace(ctx, 20)
+    drawLabel(ctx, 'Antara')
+    drawNotation(ctx, bandish.antara, bandish.startingBeat, bandish.taal)
+  }
 
   if (taans.length > 0) {
     drawSectionHeader(ctx, 'TAANS')
@@ -557,20 +598,20 @@ async function savePdf(bytes: Uint8Array, defaultPath: string): Promise<boolean>
 
 export const pdfService = {
   async exportRaagPdf(
-    raag: { id: string; name: string; thaat?: string | null; aaroh?: string | null; avroh?: string | null; pakad?: string | null; notes?: string | null }
+    raag: { id: string; name: string; thaat?: string | null; aaroh?: string | null; avroh?: string | null; pakad?: string | null; vadi?: string | null; samvadi?: string | null; komalSur?: string | null; tivraSur?: string | null; jati?: string | null; notes?: string | null }
   ): Promise<Uint8Array> {
     return buildRaagPdf(raag)
   },
 
   async exportRaagPdfToFile(
-    raag: { id: string; name: string; thaat?: string | null; aaroh?: string | null; avroh?: string | null; pakad?: string | null; notes?: string | null }
+    raag: { id: string; name: string; thaat?: string | null; aaroh?: string | null; avroh?: string | null; pakad?: string | null; vadi?: string | null; samvadi?: string | null; komalSur?: string | null; tivraSur?: string | null; jati?: string | null; notes?: string | null }
   ): Promise<boolean> {
     const bytes = await buildRaagPdf(raag)
     return savePdf(bytes, `${raag.name}.pdf`)
   },
 
   async exportSargamPdf(
-    sargam: { id: string; title: string; taal?: string | null; notation?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    sargam: { id: string; title: string; taal?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<Uint8Array> {
@@ -578,7 +619,7 @@ export const pdfService = {
   },
 
   async exportSargamPdfToFile(
-    sargam: { id: string; title: string; taal?: string | null; notation?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    sargam: { id: string; title: string; taal?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<boolean> {
@@ -587,7 +628,7 @@ export const pdfService = {
   },
 
   async exportBandishPdf(
-    bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; notation?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<Uint8Array> {
@@ -595,7 +636,7 @@ export const pdfService = {
   },
 
   async exportBandishPdfToFile(
-    bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; notation?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<boolean> {

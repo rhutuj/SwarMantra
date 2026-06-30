@@ -25,8 +25,9 @@ export default function SargamPage() {
   const { addToast } = useToast()
 
   // Notation edit state
-  const [isEditingNotation, setIsEditingNotation] = useState(false)
-  const [draftNotation, setDraftNotation] = useState('')
+  const [editingSection, setEditingSection] = useState<'asthayi' | 'antara' | null>(null)
+  const [draftAsthayi, setDraftAsthayi] = useState('')
+  const [draftAntara, setDraftAntara] = useState('')
 
   // Taan edit state
   const [editingTaanNotationId, setEditingTaanNotationId] = useState<string | null>(null)
@@ -69,14 +70,16 @@ export default function SargamPage() {
     loadSargamData()
   }, [sargamId, navigate])
 
-  const enterEditMode = () => {
-    setDraftNotation(sargam?.notation || '')
-    setIsEditingNotation(true)
+  const enterEditMode = (section: 'asthayi' | 'antara') => {
+    setDraftAsthayi(sargam?.asthayi || '')
+    setDraftAntara(sargam?.antara || '')
+    setEditingSection(section)
   }
 
   const cancelEdit = () => {
-    setIsEditingNotation(false)
-    setDraftNotation('')
+    setEditingSection(null)
+    setDraftAsthayi('')
+    setDraftAntara('')
   }
 
   const saveNotation = async () => {
@@ -85,12 +88,13 @@ export default function SargamPage() {
       const saved = await sargamService.updateSargam(sargam.id, {
         title: sargam.title,
         taal: sargam.taal ?? undefined,
-        notation: draftNotation,
+        asthayi: draftAsthayi,
+        antara: draftAntara,
         notes: sargam.notes ?? undefined,
         startingBeat: sargam.startingBeat,
       })
       updateSargam(sargam.id, saved)
-      setIsEditingNotation(false)
+      setEditingSection(null)
     } catch (error) {
       console.error('Failed to save notation:', error)
     }
@@ -209,14 +213,14 @@ export default function SargamPage() {
             )}
           </div>
           {sargamTaal && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-slate-500">Notation</h3>
                 <div className="flex rounded-lg border border-slate-300 bg-slate-50 p-0.5">
                   <button
-                    onClick={() => setIsEditingNotation(false)}
+                    onClick={() => setEditingSection(null)}
                     className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                      !isEditingNotation
+                      !editingSection
                         ? 'bg-white text-slate-900 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
@@ -224,9 +228,9 @@ export default function SargamPage() {
                     View
                   </button>
                   <button
-                    onClick={enterEditMode}
+                    onClick={() => enterEditMode('asthayi')}
                     className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                      isEditingNotation
+                      editingSection === 'asthayi'
                         ? 'bg-white text-slate-900 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
@@ -235,17 +239,28 @@ export default function SargamPage() {
                   </button>
                 </div>
               </div>
-              <div className="mt-2">
+              <div>
+                <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Asthayi</h4>
                 <NotationEditor
                   taal={sargamTaal}
                   startingBeat={sargam.startingBeat}
-                  value={isEditingNotation ? draftNotation : (sargam.notation ?? undefined)}
-                  onChange={setDraftNotation}
-                  readOnly={!isEditingNotation}
+                  value={editingSection ? draftAsthayi : (sargam.asthayi ?? undefined)}
+                  onChange={setDraftAsthayi}
+                  readOnly={!editingSection}
                 />
               </div>
-              {isEditingNotation && (
-                <div className="mt-3 flex gap-2">
+              <div>
+                <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Antara</h4>
+                <NotationEditor
+                  taal={sargamTaal}
+                  startingBeat={sargam.startingBeat}
+                  value={editingSection ? draftAntara : (sargam.antara ?? undefined)}
+                  onChange={setDraftAntara}
+                  readOnly={!editingSection}
+                />
+              </div>
+              {editingSection && (
+                <div className="flex gap-2">
                   <button
                     onClick={saveNotation}
                     className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"

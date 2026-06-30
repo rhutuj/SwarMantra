@@ -14,6 +14,11 @@ model Raag {
   aaroh     String?
   avroh     String?
   pakad     String?
+  vadi      String?
+  samvadi   String?
+  komalSur  String?
+  tivraSur  String?
+  jati      String?
   notes     String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -27,7 +32,8 @@ model Sargam {
   raagId       String
   title        String
   taal         String?
-  notation     String?
+  asthayi      String?
+  antara       String?
   notes        String?
   startingBeat Int      @default(1)
   createdAt    DateTime @default(now())
@@ -44,7 +50,8 @@ model Bandish {
   laya         String?
   composer     String?
   lyrics       String?
-  notation     String?
+  asthayi      String?
+  antara       String?
   notes        String?
   startingBeat Int      @default(1)
   createdAt    DateTime @default(now())

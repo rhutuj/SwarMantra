@@ -18,6 +18,11 @@ pub struct RaagRow {
     pub aaroh: Option<String>,
     pub avroh: Option<String>,
     pub pakad: Option<String>,
+    pub vadi: Option<String>,
+    pub samvadi: Option<String>,
+    pub komal_sur: Option<String>,
+    pub tivra_sur: Option<String>,
+    pub jati: Option<String>,
     pub notes: Option<String>,
     pub created_at: String,
     pub updated_at: String,
@@ -31,6 +36,11 @@ pub struct RaagInput {
     pub aaroh: Option<String>,
     pub avroh: Option<String>,
     pub pakad: Option<String>,
+    pub vadi: Option<String>,
+    pub samvadi: Option<String>,
+    pub komal_sur: Option<String>,
+    pub tivra_sur: Option<String>,
+    pub jati: Option<String>,
     pub notes: Option<String>,
 }
 
@@ -41,7 +51,8 @@ pub struct SargamRow {
     pub raag_id: String,
     pub title: String,
     pub taal: Option<String>,
-    pub notation: Option<String>,
+    pub asthayi: Option<String>,
+    pub antara: Option<String>,
     pub notes: Option<String>,
     pub starting_beat: i64,
     pub created_at: String,
@@ -53,7 +64,8 @@ pub struct SargamRow {
 pub struct SargamInput {
     pub title: String,
     pub taal: Option<String>,
-    pub notation: Option<String>,
+    pub asthayi: Option<String>,
+    pub antara: Option<String>,
     pub notes: Option<String>,
     pub starting_beat: Option<i64>,
 }
@@ -68,7 +80,8 @@ pub struct BandishRow {
     pub laya: Option<String>,
     pub composer: Option<String>,
     pub lyrics: Option<String>,
-    pub notation: Option<String>,
+    pub asthayi: Option<String>,
+    pub antara: Option<String>,
     pub notes: Option<String>,
     pub starting_beat: i64,
     pub created_at: String,
@@ -83,7 +96,8 @@ pub struct BandishInput {
     pub laya: Option<String>,
     pub composer: Option<String>,
     pub lyrics: Option<String>,
-    pub notation: Option<String>,
+    pub asthayi: Option<String>,
+    pub antara: Option<String>,
     pub notes: Option<String>,
     pub starting_beat: Option<i64>,
 }
@@ -190,6 +204,11 @@ impl AppDb {
                     aaroh TEXT,
                     avroh TEXT,
                     pakad TEXT,
+                    vadi TEXT,
+                    samvadi TEXT,
+                    komal_sur TEXT,
+                    tivra_sur TEXT,
+                    jati TEXT,
                     notes TEXT,
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
@@ -200,7 +219,8 @@ impl AppDb {
                     raag_id TEXT NOT NULL,
                     title TEXT NOT NULL,
                     taal TEXT,
-                    notation TEXT,
+                    asthayi TEXT,
+                    antara TEXT,
                     notes TEXT,
                     starting_beat INTEGER NOT NULL DEFAULT 1,
                     created_at TEXT NOT NULL,
@@ -216,7 +236,8 @@ impl AppDb {
                     laya TEXT,
                     composer TEXT,
                     lyrics TEXT,
-                    notation TEXT,
+                    asthayi TEXT,
+                    antara TEXT,
                     notes TEXT,
                     starting_beat INTEGER NOT NULL DEFAULT 1,
                     created_at TEXT NOT NULL,
@@ -256,6 +277,25 @@ impl AppDb {
         );
 
         let _ = connection.execute_batch(
+            "ALTER TABLE raags ADD COLUMN vadi TEXT;
+             ALTER TABLE raags ADD COLUMN samvadi TEXT;
+             ALTER TABLE raags ADD COLUMN komal_sur TEXT;
+             ALTER TABLE raags ADD COLUMN tivra_sur TEXT;
+             ALTER TABLE raags ADD COLUMN jati TEXT;",
+        );
+
+        let _ = connection.execute_batch(
+            "ALTER TABLE sargams ADD COLUMN asthayi TEXT;
+             ALTER TABLE sargams ADD COLUMN antara TEXT;
+             ALTER TABLE bandishes ADD COLUMN asthayi TEXT;
+             ALTER TABLE bandishes ADD COLUMN antara TEXT;",
+        );
+        let _ = connection.execute_batch(
+            "UPDATE sargams SET asthayi = notation WHERE notation IS NOT NULL;
+             UPDATE bandishes SET asthayi = notation WHERE notation IS NOT NULL;",
+        );
+
+        let _ = connection.execute_batch(
             "ALTER TABLE taans RENAME COLUMN starting_beat TO starting_matra;",
         );
         let _ = connection.execute_batch(
@@ -278,7 +318,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         let mut statement = connection
             .prepare(
-                "SELECT id, name, thaat, aaroh, avroh, pakad, notes, created_at, updated_at
+                "SELECT id, name, thaat, aaroh, avroh, pakad, vadi, samvadi, komal_sur, tivra_sur, jati, notes, created_at, updated_at
                  FROM raags
                  ORDER BY updated_at DESC, name ASC",
             )
@@ -297,7 +337,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         connection
             .query_row(
-                "SELECT id, name, thaat, aaroh, avroh, pakad, notes, created_at, updated_at
+                "SELECT id, name, thaat, aaroh, avroh, pakad, vadi, samvadi, komal_sur, tivra_sur, jati, notes, created_at, updated_at
                  FROM raags
                  WHERE id = ?1",
                 params![id],
@@ -317,8 +357,8 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         connection
             .execute(
-                "INSERT INTO raags (id, name, thaat, aaroh, avroh, pakad, notes, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                "INSERT INTO raags (id, name, thaat, aaroh, avroh, pakad, vadi, samvadi, komal_sur, tivra_sur, jati, notes, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                 params![
                     id,
                     name,
@@ -326,6 +366,11 @@ impl AppDb {
                     clean_optional(input.aaroh),
                     clean_optional(input.avroh),
                     clean_optional(input.pakad),
+                    clean_optional(input.vadi),
+                    clean_optional(input.samvadi),
+                    clean_optional(input.komal_sur),
+                    clean_optional(input.tivra_sur),
+                    clean_optional(input.jati),
                     clean_optional(input.notes),
                     now,
                     now
@@ -347,7 +392,7 @@ impl AppDb {
         let changed = connection
             .execute(
                 "UPDATE raags
-                 SET name = ?2, thaat = ?3, aaroh = ?4, avroh = ?5, pakad = ?6, notes = ?7, updated_at = ?8
+                 SET name = ?2, thaat = ?3, aaroh = ?4, avroh = ?5, pakad = ?6, vadi = ?7, samvadi = ?8, komal_sur = ?9, tivra_sur = ?10, jati = ?11, notes = ?12, updated_at = ?13
                  WHERE id = ?1",
                 params![
                     id,
@@ -356,6 +401,11 @@ impl AppDb {
                     clean_optional(input.aaroh),
                     clean_optional(input.avroh),
                     clean_optional(input.pakad),
+                    clean_optional(input.vadi),
+                    clean_optional(input.samvadi),
+                    clean_optional(input.komal_sur),
+                    clean_optional(input.tivra_sur),
+                    clean_optional(input.jati),
                     clean_optional(input.notes),
                     now
                 ],
@@ -380,7 +430,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         let mut statement = connection
             .prepare(
-                "SELECT id, raag_id, title, taal, notation, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM sargams
                  WHERE raag_id = ?1
                  ORDER BY updated_at DESC, title ASC",
@@ -400,7 +450,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         connection
             .query_row(
-                "SELECT id, raag_id, title, taal, notation, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM sargams
                  WHERE id = ?1",
                 params![id],
@@ -422,14 +472,15 @@ impl AppDb {
         ensure_exists(&connection, "raags", raag_id, "Raag")?;
         connection
             .execute(
-                "INSERT INTO sargams (id, raag_id, title, taal, notation, notes, starting_beat, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                "INSERT INTO sargams (id, raag_id, title, taal, asthayi, antara, notes, starting_beat, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
                 params![
                     id,
                     raag_id,
                     title,
                     clean_optional(input.taal),
-                    clean_optional(input.notation),
+                    clean_optional(input.asthayi),
+                    clean_optional(input.antara),
                     clean_optional(input.notes),
                     starting_beat,
                     now,
@@ -453,13 +504,14 @@ impl AppDb {
         let changed = connection
             .execute(
                 "UPDATE sargams
-                 SET title = ?2, taal = ?3, notation = ?4, notes = ?5, starting_beat = ?6, updated_at = ?7
+                 SET title = ?2, taal = ?3, asthayi = ?4, antara = ?5, notes = ?6, starting_beat = ?7, updated_at = ?8
                  WHERE id = ?1",
                 params![
                     id,
                     title,
                     clean_optional(input.taal),
-                    clean_optional(input.notation),
+                    clean_optional(input.asthayi),
+                    clean_optional(input.antara),
                     clean_optional(input.notes),
                     starting_beat,
                     now
@@ -485,7 +537,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         let mut statement = connection
             .prepare(
-                "SELECT id, raag_id, title, taal, laya, composer, lyrics, notation, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM bandishes
                  WHERE raag_id = ?1
                  ORDER BY updated_at DESC, title ASC",
@@ -505,7 +557,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         connection
             .query_row(
-                "SELECT id, raag_id, title, taal, laya, composer, lyrics, notation, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM bandishes
                  WHERE id = ?1",
                 params![id],
@@ -527,8 +579,8 @@ impl AppDb {
         ensure_exists(&connection, "raags", raag_id, "Raag")?;
         connection
             .execute(
-                "INSERT INTO bandishes (id, raag_id, title, taal, laya, composer, lyrics, notation, notes, starting_beat, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                "INSERT INTO bandishes (id, raag_id, title, taal, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                 params![
                     id,
                     raag_id,
@@ -537,7 +589,8 @@ impl AppDb {
                     clean_optional(input.laya),
                     clean_optional(input.composer),
                     clean_optional(input.lyrics),
-                    clean_optional(input.notation),
+                    clean_optional(input.asthayi),
+                    clean_optional(input.antara),
                     clean_optional(input.notes),
                     starting_beat,
                     now,
@@ -561,7 +614,7 @@ impl AppDb {
         let changed = connection
             .execute(
                 "UPDATE bandishes
-                 SET title = ?2, taal = ?3, laya = ?4, composer = ?5, lyrics = ?6, notation = ?7, notes = ?8, starting_beat = ?9, updated_at = ?10
+                 SET title = ?2, taal = ?3, laya = ?4, composer = ?5, lyrics = ?6, asthayi = ?7, antara = ?8, notes = ?9, starting_beat = ?10, updated_at = ?11
                  WHERE id = ?1",
                 params![
                     id,
@@ -570,7 +623,8 @@ impl AppDb {
                     clean_optional(input.laya),
                     clean_optional(input.composer),
                     clean_optional(input.lyrics),
-                    clean_optional(input.notation),
+                    clean_optional(input.asthayi),
+                    clean_optional(input.antara),
                     clean_optional(input.notes),
                     starting_beat,
                     now
@@ -734,9 +788,14 @@ fn row_to_raag(row: &rusqlite::Row<'_>) -> rusqlite::Result<RaagRow> {
         aaroh: row.get(3)?,
         avroh: row.get(4)?,
         pakad: row.get(5)?,
-        notes: row.get(6)?,
-        created_at: row.get(7)?,
-        updated_at: row.get(8)?,
+        vadi: row.get(6)?,
+        samvadi: row.get(7)?,
+        komal_sur: row.get(8)?,
+        tivra_sur: row.get(9)?,
+        jati: row.get(10)?,
+        notes: row.get(11)?,
+        created_at: row.get(12)?,
+        updated_at: row.get(13)?,
     })
 }
 
@@ -746,11 +805,12 @@ fn row_to_sargam(row: &rusqlite::Row<'_>) -> rusqlite::Result<SargamRow> {
         raag_id: row.get(1)?,
         title: row.get(2)?,
         taal: row.get(3)?,
-        notation: row.get(4)?,
-        notes: row.get(5)?,
-        starting_beat: row.get(6)?,
-        created_at: row.get(7)?,
-        updated_at: row.get(8)?,
+        asthayi: row.get(4)?,
+        antara: row.get(5)?,
+        notes: row.get(6)?,
+        starting_beat: row.get(7)?,
+        created_at: row.get(8)?,
+        updated_at: row.get(9)?,
     })
 }
 
@@ -763,11 +823,12 @@ fn row_to_bandish(row: &rusqlite::Row<'_>) -> rusqlite::Result<BandishRow> {
         laya: row.get(4)?,
         composer: row.get(5)?,
         lyrics: row.get(6)?,
-        notation: row.get(7)?,
-        notes: row.get(8)?,
-        starting_beat: row.get(9)?,
-        created_at: row.get(10)?,
-        updated_at: row.get(11)?,
+        asthayi: row.get(7)?,
+        antara: row.get(8)?,
+        notes: row.get(9)?,
+        starting_beat: row.get(10)?,
+        created_at: row.get(11)?,
+        updated_at: row.get(12)?,
     })
 }
 
@@ -803,6 +864,11 @@ mod tests {
                 aaroh: None,
                 avroh: None,
                 pakad: None,
+                vadi: None,
+                samvadi: None,
+                komal_sur: None,
+                tivra_sur: None,
+                jati: None,
                 notes: Some("".to_string()),
             })
             .expect("raag should be created");
@@ -816,7 +882,8 @@ mod tests {
                 SargamInput {
                     title: "Sargam 1".to_string(),
                     taal: Some("Teentaal".to_string()),
-                    notation: Some("S R G".to_string()),
+                    asthayi: Some("S R G".to_string()),
+                    antara: None,
                     notes: None,
                     starting_beat: Some(1),
                 },
@@ -832,7 +899,8 @@ mod tests {
                     laya: Some("Madhya".to_string()),
                     composer: None,
                     lyrics: None,
-                    notation: None,
+                    asthayi: None,
+                    antara: None,
                     notes: None,
                     starting_beat: Some(9),
                 },
@@ -911,6 +979,11 @@ mod tests {
                 aaroh: Some("S R G m P D N S'".to_string()),
                 avroh: Some("S' N D P m G R S".to_string()),
                 pakad: Some("N R G R S".to_string()),
+                vadi: Some("Ga".to_string()),
+                samvadi: Some("Ni".to_string()),
+                komal_sur: None,
+                tivra_sur: Some("Ma".to_string()),
+                jati: Some("Sampurna-Sampurna".to_string()),
                 notes: Some("Evening raag".to_string()),
             })
             .expect("raag should be created");
@@ -921,7 +994,8 @@ mod tests {
                 SargamInput {
                     title: "Sargam 1".to_string(),
                     taal: Some("Teentaal".to_string()),
-                    notation: Some("S R G m|P D N S'".to_string()),
+                    asthayi: Some("S R G m|P D N S'".to_string()),
+                    antara: None,
                     notes: Some("Sargam notes".to_string()),
                     starting_beat: Some(1),
                 },
@@ -948,7 +1022,8 @@ mod tests {
                     laya: Some("Madhya".to_string()),
                     composer: Some("Traditional".to_string()),
                     lyrics: Some("Kali teri...".to_string()),
-                    notation: Some("S R G|m P D".to_string()),
+                    asthayi: Some("S R G|m P D".to_string()),
+                    antara: None,
                     notes: Some("Bandish notes".to_string()),
                     starting_beat: Some(9),
                 },
@@ -975,27 +1050,34 @@ mod tests {
                 "aaroh": raag.aaroh,
                 "avroh": raag.avroh,
                 "pakad": raag.pakad,
+                "vadi": raag.vadi,
+                "samvadi": raag.samvadi,
+                "komalSur": raag.komal_sur,
+                "tivraSur": raag.tivra_sur,
+                "jati": raag.jati,
                 "notes": raag.notes,
-                "sargams": [{
-                    "title": sargam.title,
-                    "taal": sargam.taal,
-                    "notation": sargam.notation,
-                    "notes": sargam.notes,
-                    "startingBeat": sargam.starting_beat,
+                        "sargams": [{
+                            "title": sargam.title,
+                            "taal": sargam.taal,
+                            "asthayi": sargam.asthayi,
+                            "antara": sargam.antara,
+                            "notes": sargam.notes,
+                            "startingBeat": sargam.starting_beat,
                     "taans": [{
                         "notation": "S R G|m P D",
                         "startingMatra": 1
                     }]
                 }],
-                "bandishes": [{
-                    "title": bandish.title,
-                    "taal": bandish.taal,
-                    "laya": bandish.laya,
-                    "composer": bandish.composer,
-                    "lyrics": bandish.lyrics,
-                    "notation": bandish.notation,
-                    "notes": bandish.notes,
-                    "startingBeat": bandish.starting_beat,
+                        "bandishes": [{
+                            "title": bandish.title,
+                            "taal": bandish.taal,
+                            "laya": bandish.laya,
+                            "composer": bandish.composer,
+                            "lyrics": bandish.lyrics,
+                            "asthayi": bandish.asthayi,
+                            "antara": bandish.antara,
+                            "notes": bandish.notes,
+                            "startingBeat": bandish.starting_beat,
                     "taans": [{
                         "notation": "S' N D|P m G",
                         "startingMatra": 1
@@ -1013,16 +1095,21 @@ mod tests {
         let raags = parsed["raags"].as_array().unwrap();
 
         for r in raags {
-            let imported_raag = db2
-                .create_raag(RaagInput {
-                    name: r["name"].as_str().unwrap().to_string(),
-                    thaat: r["thaat"].as_str().map(|s| s.to_string()),
-                    aaroh: r["aaroh"].as_str().map(|s| s.to_string()),
-                    avroh: r["avroh"].as_str().map(|s| s.to_string()),
-                    pakad: r["pakad"].as_str().map(|s| s.to_string()),
-                    notes: r["notes"].as_str().map(|s| s.to_string()),
-                })
-                .unwrap();
+                let imported_raag = db2
+                    .create_raag(RaagInput {
+                        name: r["name"].as_str().unwrap().to_string(),
+                        thaat: r["thaat"].as_str().map(|s| s.to_string()),
+                        aaroh: r["aaroh"].as_str().map(|s| s.to_string()),
+                        avroh: r["avroh"].as_str().map(|s| s.to_string()),
+                        pakad: r["pakad"].as_str().map(|s| s.to_string()),
+                        vadi: r["vadi"].as_str().map(|s| s.to_string()),
+                        samvadi: r["samvadi"].as_str().map(|s| s.to_string()),
+                        komal_sur: r["komalSur"].as_str().map(|s| s.to_string()),
+                        tivra_sur: r["tivraSur"].as_str().map(|s| s.to_string()),
+                        jati: r["jati"].as_str().map(|s| s.to_string()),
+                        notes: r["notes"].as_str().map(|s| s.to_string()),
+                    })
+                    .unwrap();
 
             // Verify raag
             assert_eq!(imported_raag.name, "Yaman");
@@ -1031,6 +1118,11 @@ mod tests {
             assert_eq!(imported_raag.avroh.as_deref(), Some("S' N D P m G R S"));
             assert_eq!(imported_raag.pakad.as_deref(), Some("N R G R S"));
             assert_eq!(imported_raag.notes.as_deref(), Some("Evening raag"));
+            assert_eq!(imported_raag.vadi.as_deref(), Some("Ga"));
+            assert_eq!(imported_raag.samvadi.as_deref(), Some("Ni"));
+            assert_eq!(imported_raag.komal_sur, None);
+            assert_eq!(imported_raag.tivra_sur.as_deref(), Some("Ma"));
+            assert_eq!(imported_raag.jati.as_deref(), Some("Sampurna-Sampurna"));
 
             // Import sargams
             for s in r["sargams"].as_array().unwrap() {
@@ -1040,7 +1132,8 @@ mod tests {
                         SargamInput {
                             title: s["title"].as_str().unwrap().to_string(),
                             taal: s["taal"].as_str().map(|v| v.to_string()),
-                            notation: s["notation"].as_str().map(|v| v.to_string()),
+                            asthayi: s["asthayi"].as_str().map(|v| v.to_string()),
+                            antara: s["antara"].as_str().map(|v| v.to_string()),
                             notes: s["notes"].as_str().map(|v| v.to_string()),
                             starting_beat: Some(s["startingBeat"].as_i64().unwrap_or(1)),
                         },
@@ -1050,9 +1143,10 @@ mod tests {
                 assert_eq!(imported_sargam.title, "Sargam 1");
                 assert_eq!(imported_sargam.taal.as_deref(), Some("Teentaal"));
                 assert_eq!(
-                    imported_sargam.notation.as_deref(),
+                    imported_sargam.asthayi.as_deref(),
                     Some("S R G m|P D N S'")
                 );
+                assert_eq!(imported_sargam.antara, None);
                 assert_eq!(imported_sargam.notes.as_deref(), Some("Sargam notes"));
                 assert_eq!(imported_sargam.starting_beat, 1);
 
@@ -1089,7 +1183,8 @@ mod tests {
                             laya: b["laya"].as_str().map(|v| v.to_string()),
                             composer: b["composer"].as_str().map(|v| v.to_string()),
                             lyrics: b["lyrics"].as_str().map(|v| v.to_string()),
-                            notation: b["notation"].as_str().map(|v| v.to_string()),
+                            asthayi: b["asthayi"].as_str().map(|v| v.to_string()),
+                            antara: b["antara"].as_str().map(|v| v.to_string()),
                             notes: b["notes"].as_str().map(|v| v.to_string()),
                             starting_beat: Some(b["startingBeat"].as_i64().unwrap_or(1)),
                         },
@@ -1101,7 +1196,8 @@ mod tests {
                 assert_eq!(imported_bandish.laya.as_deref(), Some("Madhya"));
                 assert_eq!(imported_bandish.composer.as_deref(), Some("Traditional"));
                 assert_eq!(imported_bandish.lyrics.as_deref(), Some("Kali teri..."));
-                assert_eq!(imported_bandish.notation.as_deref(), Some("S R G|m P D"));
+                assert_eq!(imported_bandish.asthayi.as_deref(), Some("S R G|m P D"));
+                assert_eq!(imported_bandish.antara, None);
                 assert_eq!(imported_bandish.notes.as_deref(), Some("Bandish notes"));
                 assert_eq!(imported_bandish.starting_beat, 9);
 

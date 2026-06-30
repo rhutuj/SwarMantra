@@ -223,6 +223,26 @@ export default function RaagPage() {
               <p className="mt-2 text-slate-700">{raag.thaat || '-'}</p>
             </div>
             <div>
+              <h3 className="text-sm font-medium text-slate-500">Vadi</h3>
+              <p className="mt-2 text-slate-700">{raag.vadi || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-500">Samvadi</h3>
+              <p className="mt-2 text-slate-700">{raag.samvadi || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-500">Komal Sur</h3>
+              <p className="mt-2 text-slate-700">{raag.komalSur || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-500">Tivra Sur</h3>
+              <p className="mt-2 text-slate-700">{raag.tivraSur || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-500">Jati</h3>
+              <p className="mt-2 text-slate-700">{raag.jati || '-'}</p>
+            </div>
+            <div>
               <h3 className="text-sm font-medium text-slate-500">Aaroh</h3>
               <p className="mt-2 font-mono text-slate-700">{raag.aaroh || '-'}</p>
             </div>
