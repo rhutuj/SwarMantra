@@ -182,7 +182,7 @@ export default function TaanForm({ taal, initialData, onSubmit, onCancel }: Taan
           value={formData.notation}
           onChange={handleChange}
           onKeyDown={handleNotationKeyDown}
-          placeholder="Enter taan notation (e.g., S R G M P D N S')"
+          placeholder="Enter taan notation (e.g., S r G M P d N S' or kR tM)"
           rows={4}
           className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 font-mono"
         />
