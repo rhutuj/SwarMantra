@@ -38,10 +38,10 @@ export const TAALS: Record<string, TaalConfig> = {
     name: 'Jhaptaal',
     totalMatras: 10,
     vibhags: [
-      { matras: 2, marker: 'X', type: 'sam' },
+      { matras: 2, marker: 'x', type: 'sam' },
       { matras: 3, marker: '2', type: 'normal' },
       { matras: 2, marker: 'O', type: 'khali' },
-      { matras: 3, marker: '4', type: 'normal' },
+      { matras: 3, marker: '3', type: 'normal' },
     ],
   },
   Ektaal: {

@@ -88,6 +88,8 @@ export default function SargamPage() {
       const saved = await sargamService.updateSargam(sargam.id, {
         title: sargam.title,
         taal: sargam.taal ?? undefined,
+        bpm: sargam.bpm ?? undefined,
+        laya: sargam.laya ?? undefined,
         asthayi: draftAsthayi,
         antara: draftAntara,
         notes: sargam.notes ?? undefined,
@@ -196,7 +198,7 @@ export default function SargamPage() {
       <div className="space-y-6">
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">Sargam Information</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-4 sm:grid-cols-4">
             <div>
               <h3 className="text-sm font-medium text-slate-500">Taal</h3>
               <p className="mt-2 text-slate-700">{sargam.taal || '-'}</p>
@@ -204,6 +206,14 @@ export default function SargamPage() {
             <div>
               <h3 className="text-sm font-medium text-slate-500">Starting Beat</h3>
               <p className="mt-2 text-slate-700">{sargam.startingBeat}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-500">Laya</h3>
+              <p className="mt-2 text-slate-700">{sargam.laya ?? '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-slate-500">BPM (Speed)</h3>
+              <p className="mt-2 text-slate-700">{sargam.bpm ?? '-'}</p>
             </div>
             {sargam.notes && (
               <div>

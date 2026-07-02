@@ -51,6 +51,8 @@ pub struct SargamRow {
     pub raag_id: String,
     pub title: String,
     pub taal: Option<String>,
+    pub bpm: Option<i64>,
+    pub laya: Option<String>,
     pub asthayi: Option<String>,
     pub antara: Option<String>,
     pub notes: Option<String>,
@@ -64,6 +66,8 @@ pub struct SargamRow {
 pub struct SargamInput {
     pub title: String,
     pub taal: Option<String>,
+    pub bpm: Option<i64>,
+    pub laya: Option<String>,
     pub asthayi: Option<String>,
     pub antara: Option<String>,
     pub notes: Option<String>,
@@ -77,6 +81,7 @@ pub struct BandishRow {
     pub raag_id: String,
     pub title: String,
     pub taal: Option<String>,
+    pub bpm: Option<i64>,
     pub laya: Option<String>,
     pub composer: Option<String>,
     pub lyrics: Option<String>,
@@ -93,6 +98,7 @@ pub struct BandishRow {
 pub struct BandishInput {
     pub title: String,
     pub taal: Option<String>,
+    pub bpm: Option<i64>,
     pub laya: Option<String>,
     pub composer: Option<String>,
     pub lyrics: Option<String>,
@@ -219,6 +225,8 @@ impl AppDb {
                     raag_id TEXT NOT NULL,
                     title TEXT NOT NULL,
                     taal TEXT,
+                    bpm INTEGER,
+                    laya TEXT,
                     asthayi TEXT,
                     antara TEXT,
                     notes TEXT,
@@ -233,6 +241,7 @@ impl AppDb {
                     raag_id TEXT NOT NULL,
                     title TEXT NOT NULL,
                     taal TEXT,
+                    bpm INTEGER,
                     laya TEXT,
                     composer TEXT,
                     lyrics TEXT,
@@ -306,6 +315,15 @@ impl AppDb {
         );
         let _ = connection.execute_batch(
             "ALTER TABLE taans DROP COLUMN title;",
+        );
+
+        let _ = connection.execute_batch(
+            "ALTER TABLE sargams ADD COLUMN bpm INTEGER;
+             ALTER TABLE bandishes ADD COLUMN bpm INTEGER;",
+        );
+
+        let _ = connection.execute_batch(
+            "ALTER TABLE sargams ADD COLUMN laya TEXT;",
         );
 
         Ok(())
@@ -430,7 +448,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         let mut statement = connection
             .prepare(
-                "SELECT id, raag_id, title, taal, asthayi, antara, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, bpm, laya, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM sargams
                  WHERE raag_id = ?1
                  ORDER BY updated_at DESC, title ASC",
@@ -450,7 +468,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         connection
             .query_row(
-                "SELECT id, raag_id, title, taal, asthayi, antara, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, bpm, laya, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM sargams
                  WHERE id = ?1",
                 params![id],
@@ -472,13 +490,15 @@ impl AppDb {
         ensure_exists(&connection, "raags", raag_id, "Raag")?;
         connection
             .execute(
-                "INSERT INTO sargams (id, raag_id, title, taal, asthayi, antara, notes, starting_beat, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                "INSERT INTO sargams (id, raag_id, title, taal, bpm, laya, asthayi, antara, notes, starting_beat, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
                 params![
                     id,
                     raag_id,
                     title,
                     clean_optional(input.taal),
+                    input.bpm,
+                    clean_optional(input.laya),
                     clean_optional(input.asthayi),
                     clean_optional(input.antara),
                     clean_optional(input.notes),
@@ -504,12 +524,14 @@ impl AppDb {
         let changed = connection
             .execute(
                 "UPDATE sargams
-                 SET title = ?2, taal = ?3, asthayi = ?4, antara = ?5, notes = ?6, starting_beat = ?7, updated_at = ?8
+                 SET title = ?2, taal = ?3, bpm = ?4, laya = ?5, asthayi = ?6, antara = ?7, notes = ?8, starting_beat = ?9, updated_at = ?10
                  WHERE id = ?1",
                 params![
                     id,
                     title,
                     clean_optional(input.taal),
+                    input.bpm,
+                    clean_optional(input.laya),
                     clean_optional(input.asthayi),
                     clean_optional(input.antara),
                     clean_optional(input.notes),
@@ -537,7 +559,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         let mut statement = connection
             .prepare(
-                "SELECT id, raag_id, title, taal, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, bpm, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM bandishes
                  WHERE raag_id = ?1
                  ORDER BY updated_at DESC, title ASC",
@@ -557,7 +579,7 @@ impl AppDb {
             .map_err(|_| "Database lock failed".to_string())?;
         connection
             .query_row(
-                "SELECT id, raag_id, title, taal, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at
+                "SELECT id, raag_id, title, taal, bpm, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at
                  FROM bandishes
                  WHERE id = ?1",
                 params![id],
@@ -579,13 +601,14 @@ impl AppDb {
         ensure_exists(&connection, "raags", raag_id, "Raag")?;
         connection
             .execute(
-                "INSERT INTO bandishes (id, raag_id, title, taal, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                "INSERT INTO bandishes (id, raag_id, title, taal, bpm, laya, composer, lyrics, asthayi, antara, notes, starting_beat, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                 params![
                     id,
                     raag_id,
                     title,
                     clean_optional(input.taal),
+                    input.bpm,
                     clean_optional(input.laya),
                     clean_optional(input.composer),
                     clean_optional(input.lyrics),
@@ -614,12 +637,13 @@ impl AppDb {
         let changed = connection
             .execute(
                 "UPDATE bandishes
-                 SET title = ?2, taal = ?3, laya = ?4, composer = ?5, lyrics = ?6, asthayi = ?7, antara = ?8, notes = ?9, starting_beat = ?10, updated_at = ?11
+                 SET title = ?2, taal = ?3, bpm = ?4, laya = ?5, composer = ?6, lyrics = ?7, asthayi = ?8, antara = ?9, notes = ?10, starting_beat = ?11, updated_at = ?12
                  WHERE id = ?1",
                 params![
                     id,
                     title,
                     clean_optional(input.taal),
+                    input.bpm,
                     clean_optional(input.laya),
                     clean_optional(input.composer),
                     clean_optional(input.lyrics),
@@ -805,12 +829,14 @@ fn row_to_sargam(row: &rusqlite::Row<'_>) -> rusqlite::Result<SargamRow> {
         raag_id: row.get(1)?,
         title: row.get(2)?,
         taal: row.get(3)?,
-        asthayi: row.get(4)?,
-        antara: row.get(5)?,
-        notes: row.get(6)?,
-        starting_beat: row.get(7)?,
-        created_at: row.get(8)?,
-        updated_at: row.get(9)?,
+        bpm: row.get(4)?,
+        laya: row.get(5)?,
+        asthayi: row.get(6)?,
+        antara: row.get(7)?,
+        notes: row.get(8)?,
+        starting_beat: row.get(9)?,
+        created_at: row.get(10)?,
+        updated_at: row.get(11)?,
     })
 }
 
@@ -820,15 +846,16 @@ fn row_to_bandish(row: &rusqlite::Row<'_>) -> rusqlite::Result<BandishRow> {
         raag_id: row.get(1)?,
         title: row.get(2)?,
         taal: row.get(3)?,
-        laya: row.get(4)?,
-        composer: row.get(5)?,
-        lyrics: row.get(6)?,
-        asthayi: row.get(7)?,
-        antara: row.get(8)?,
-        notes: row.get(9)?,
-        starting_beat: row.get(10)?,
-        created_at: row.get(11)?,
-        updated_at: row.get(12)?,
+        bpm: row.get(4)?,
+        laya: row.get(5)?,
+        composer: row.get(6)?,
+        lyrics: row.get(7)?,
+        asthayi: row.get(8)?,
+        antara: row.get(9)?,
+        notes: row.get(10)?,
+        starting_beat: row.get(11)?,
+        created_at: row.get(12)?,
+        updated_at: row.get(13)?,
     })
 }
 
@@ -882,6 +909,8 @@ mod tests {
                 SargamInput {
                     title: "Sargam 1".to_string(),
                     taal: Some("Teentaal".to_string()),
+                    bpm: None,
+                    laya: None,
                     asthayi: Some("S R G".to_string()),
                     antara: None,
                     notes: None,
@@ -896,6 +925,7 @@ mod tests {
                 BandishInput {
                     title: "Bandish 1".to_string(),
                     taal: Some("Ektaal".to_string()),
+                    bpm: None,
                     laya: Some("Madhya".to_string()),
                     composer: None,
                     lyrics: None,
@@ -994,6 +1024,8 @@ mod tests {
                 SargamInput {
                     title: "Sargam 1".to_string(),
                     taal: Some("Teentaal".to_string()),
+                    bpm: None,
+                    laya: None,
                     asthayi: Some("S R G m|P D N S'".to_string()),
                     antara: None,
                     notes: Some("Sargam notes".to_string()),
@@ -1019,6 +1051,7 @@ mod tests {
                 BandishInput {
                     title: "Bandish 1".to_string(),
                     taal: Some("Jhaptaal".to_string()),
+                    bpm: None,
                     laya: Some("Madhya".to_string()),
                     composer: Some("Traditional".to_string()),
                     lyrics: Some("Kali teri...".to_string()),
@@ -1132,6 +1165,8 @@ mod tests {
                         SargamInput {
                             title: s["title"].as_str().unwrap().to_string(),
                             taal: s["taal"].as_str().map(|v| v.to_string()),
+                            bpm: s["bpm"].as_i64(),
+                            laya: s["laya"].as_str().map(|v| v.to_string()),
                             asthayi: s["asthayi"].as_str().map(|v| v.to_string()),
                             antara: s["antara"].as_str().map(|v| v.to_string()),
                             notes: s["notes"].as_str().map(|v| v.to_string()),
@@ -1180,6 +1215,7 @@ mod tests {
                         BandishInput {
                             title: b["title"].as_str().unwrap().to_string(),
                             taal: b["taal"].as_str().map(|v| v.to_string()),
+                            bpm: b["bpm"].as_i64(),
                             laya: b["laya"].as_str().map(|v| v.to_string()),
                             composer: b["composer"].as_str().map(|v| v.to_string()),
                             lyrics: b["lyrics"].as_str().map(|v| v.to_string()),

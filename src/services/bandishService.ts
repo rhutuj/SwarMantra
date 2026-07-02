@@ -5,6 +5,7 @@ export interface Bandish {
   raagId: string
   title: string
   taal?: string | null
+  bpm?: number | null
   laya?: string | null
   composer?: string | null
   lyrics?: string | null
@@ -19,6 +20,7 @@ export interface Bandish {
 export interface BandishInput {
   title: string
   taal?: string
+  bpm?: number | null
   laya?: string
   composer?: string
   lyrics?: string

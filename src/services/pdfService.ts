@@ -318,7 +318,7 @@ function drawNotation(
       drawHalfMoonArc(currentPage, cellX[i], cellWidth, ctx.y - 5, noteCount, arcColor)
     }
 
-    ctx.y -= 22
+    ctx.y -= 28
   }
 }
 
@@ -360,6 +360,8 @@ async function buildRaagPdf(
         drawSubTitle(ctx, `SARGAM : ${s.title}`)
         drawDivider(ctx)
         if (s.taal) drawPair(ctx, 'Taal', s.taal)
+        if (s.laya) drawPair(ctx, 'Laya', s.laya)
+        if (s.bpm) drawPair(ctx, 'BPM', String(s.bpm))
         if (s.notes) { checkSpace(ctx, 20); drawText(ctx, s.notes, ctx.fontSize - 1) }
         if (s.asthayi) {
           checkSpace(ctx, 20)
@@ -394,6 +396,7 @@ async function buildRaagPdf(
         if (b.composer) drawPair(ctx, 'Composer', b.composer)
         if (b.taal) drawPair(ctx, 'Taal', b.taal)
         if (b.laya) drawPair(ctx, 'Laya', b.laya)
+        if (b.bpm) drawPair(ctx, 'BPM', String(b.bpm))
         if (b.lyrics) {
           checkSpace(ctx, 20)
           drawLabel(ctx, 'Lyrics')
@@ -426,7 +429,7 @@ async function buildRaagPdf(
 }
 
 async function buildSargamPdf(
-  sargam: { id: string; title: string; taal?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+  sargam: { id: string; title: string; taal?: string | null; bpm?: number | null; laya?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
   raag: { name: string },
   taans: Taan[]
 ): Promise<Uint8Array> {
@@ -441,6 +444,8 @@ async function buildSargamPdf(
 
   drawPair(ctx, 'Raag', raag.name)
   if (sargam.taal) drawPair(ctx, 'Taal', sargam.taal)
+  if (sargam.laya) drawPair(ctx, 'Laya', sargam.laya)
+  if (sargam.bpm) drawPair(ctx, 'BPM', String(sargam.bpm))
   if (sargam.notes) {
     checkSpace(ctx, 20)
     drawLabel(ctx, 'Notes')
@@ -481,7 +486,7 @@ async function buildSargamPdf(
 }
 
 async function buildBandishPdf(
-  bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+  bandish: { id: string; title: string; taal?: string | null; bpm?: number | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
   raag: { name: string },
   taans: Taan[]
 ): Promise<Uint8Array> {
@@ -498,6 +503,7 @@ async function buildBandishPdf(
   if (bandish.composer) drawPair(ctx, 'Composer', bandish.composer)
   if (bandish.taal) drawPair(ctx, 'Taal', bandish.taal)
   if (bandish.laya) drawPair(ctx, 'Laya', bandish.laya)
+  if (bandish.bpm) drawPair(ctx, 'BPM', String(bandish.bpm))
   if (bandish.lyrics) {
     checkSpace(ctx, 20)
     drawLabel(ctx, 'Lyrics')
@@ -611,7 +617,7 @@ export const pdfService = {
   },
 
   async exportSargamPdf(
-    sargam: { id: string; title: string; taal?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    sargam: { id: string; title: string; taal?: string | null; bpm?: number | null; laya?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<Uint8Array> {
@@ -619,7 +625,7 @@ export const pdfService = {
   },
 
   async exportSargamPdfToFile(
-    sargam: { id: string; title: string; taal?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    sargam: { id: string; title: string; taal?: string | null; bpm?: number | null; laya?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<boolean> {
@@ -628,7 +634,7 @@ export const pdfService = {
   },
 
   async exportBandishPdf(
-    bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    bandish: { id: string; title: string; taal?: string | null; bpm?: number | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<Uint8Array> {
@@ -636,7 +642,7 @@ export const pdfService = {
   },
 
   async exportBandishPdfToFile(
-    bandish: { id: string; title: string; taal?: string | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
+    bandish: { id: string; title: string; taal?: string | null; bpm?: number | null; laya?: string | null; composer?: string | null; lyrics?: string | null; asthayi?: string | null; antara?: string | null; notes?: string | null; startingBeat: number; raagId: string },
     raag: { name: string },
     taans: Taan[]
   ): Promise<boolean> {

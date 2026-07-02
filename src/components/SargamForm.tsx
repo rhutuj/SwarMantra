@@ -13,6 +13,8 @@ export default function SargamForm({ initialData, onSubmit, onCancel }: SargamFo
   const [formData, setFormData] = useState<SargamInput>({
     title: initialData?.title || '',
     taal: initialData?.taal || '',
+    bpm: initialData?.bpm ?? undefined,
+    laya: initialData?.laya || '',
     asthayi: initialData?.asthayi || '',
     antara: initialData?.antara || '',
     notes: initialData?.notes || '',
@@ -23,7 +25,7 @@ export default function SargamForm({ initialData, onSubmit, onCancel }: SargamFo
     const { name, value } = e.currentTarget
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'startingBeat' ? parseInt(value) || 1 : value,
+      [name]: name === 'startingBeat' || name === 'bpm' ? parseInt(value) || 1 : value,
     }))
   }
 
@@ -53,7 +55,7 @@ export default function SargamForm({ initialData, onSubmit, onCancel }: SargamFo
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div>
           <label htmlFor="taal" className="block text-sm font-medium text-slate-700">
             Taal
@@ -72,6 +74,34 @@ export default function SargamForm({ initialData, onSubmit, onCancel }: SargamFo
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label htmlFor="laya" className="block text-sm font-medium text-slate-700">
+            Laya
+          </label>
+          <input
+            type="text"
+            id="laya"
+            name="laya"
+            value={formData.laya}
+            onChange={handleChange}
+            placeholder="e.g., Vilambith, Madhya"
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="bpm" className="block text-sm font-medium text-slate-700">
+            BPM (Speed)
+          </label>
+          <input
+            type="number"
+            id="bpm"
+            name="bpm"
+            value={formData.bpm ?? ''}
+            onChange={handleChange}
+            min={1}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+          />
         </div>
         <div>
           <label htmlFor="startingBeat" className="block text-sm font-medium text-slate-700">

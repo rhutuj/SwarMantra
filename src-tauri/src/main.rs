@@ -392,6 +392,8 @@ struct SwarRaagInput {
 struct SwarSargamInput {
     title: String,
     taal: Option<String>,
+    bpm: Option<i64>,
+    laya: Option<String>,
     asthayi: Option<String>,
     antara: Option<String>,
     notes: Option<String>,
@@ -406,6 +408,7 @@ struct SwarSargamInput {
 struct SwarBandishInput {
     title: String,
     taal: Option<String>,
+    bpm: Option<i64>,
     laya: Option<String>,
     composer: Option<String>,
     lyrics: Option<String>,
@@ -469,6 +472,8 @@ fn import_swar(json: String, db: State<'_, AppDb>) -> Result<Vec<RaagRow>, Strin
                 SargamInput {
                     title: s.title,
                     taal: s.taal,
+                    bpm: s.bpm,
+                    laya: s.laya,
                     asthayi: s.asthayi,
                     antara: s.antara,
                     notes: s.notes,
@@ -495,6 +500,7 @@ fn import_swar(json: String, db: State<'_, AppDb>) -> Result<Vec<RaagRow>, Strin
                 BandishInput {
                     title: b.title,
                     taal: b.taal,
+                    bpm: b.bpm,
                     laya: b.laya,
                     composer: b.composer,
                     lyrics: b.lyrics,

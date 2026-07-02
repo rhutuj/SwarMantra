@@ -32,6 +32,8 @@ model Sargam {
   raagId       String
   title        String
   taal         String?
+  bpm          Int?
+  laya         String?
   asthayi      String?
   antara       String?
   notes        String?
@@ -47,6 +49,7 @@ model Bandish {
   raagId       String
   title        String
   taal         String?
+  bpm          Int?
   laya         String?
   composer     String?
   lyrics       String?

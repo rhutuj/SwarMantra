@@ -89,6 +89,7 @@ export default function BandishPage() {
         title: bandish.title,
         taal: bandish.taal ?? undefined,
         laya: bandish.laya ?? undefined,
+        bpm: bandish.bpm ?? undefined,
         composer: bandish.composer ?? undefined,
         lyrics: bandish.lyrics ?? undefined,
         asthayi: draftAsthayi,
@@ -212,8 +213,14 @@ export default function BandishPage() {
             </div>
             {bandish.laya && (
               <div>
-                <h3 className="text-sm font-medium text-slate-500">Laya (Speed)</h3>
+                <h3 className="text-sm font-medium text-slate-500">Laya</h3>
                 <p className="mt-2 text-slate-700">{bandish.laya}</p>
+              </div>
+            )}
+            {bandish.bpm && (
+              <div>
+                <h3 className="text-sm font-medium text-slate-500">BPM (Speed)</h3>
+                <p className="mt-2 text-slate-700">{bandish.bpm}</p>
               </div>
             )}
             <div>
